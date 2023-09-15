@@ -2,6 +2,7 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.services.CustomerService
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -19,8 +20,13 @@ class CustomerController (
     @PostMapping()
     suspend fun saveCustomer(customerDto: CustomerDto) = customerService.saveCustomer(customerDto)
 
+    @DeleteMapping()
     suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto)
 
+    @GetMapping("/get/all")
     suspend fun getAllCustomers() = customerService.getAllCustomers()
+
+    @PostMapping("/add/watched")
+    suspend fun addToWatchedList() = null
 
 }

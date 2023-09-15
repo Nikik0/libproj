@@ -1,7 +1,5 @@
 package com.nikik0.libproj.dtos
 
-import com.nikik0.libproj.entities.AddressEntity
-
 data class CustomerDto(
     val id: Long,
     val name: String,
