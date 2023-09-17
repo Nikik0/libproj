@@ -11,7 +11,9 @@ import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.FilmRepository
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Service
 class CustomerService (
@@ -53,15 +55,45 @@ class CustomerService (
     suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
-    suspend fun addToWatched(customer: CustomerDto, filmDto: FilmDto) {
+    suspend fun addToWatched(customer: CustomerDto, filmDto: FilmDto): CustomerDto? {
         val film = filmRepository.findById(filmDto.id)
-        customerRepository.findById(customer.id)?:
-        customerRepository.save(
-            CustomerEntity(
-                id = .id,
+        val customerEntity = customerRepository.findById(customer.id)
+        return if (customerEntity != null && film != null) {
+            customerRepository.save(
+                CustomerEntity(
+                    id = customerEntity.id,
+                    name = customerEntity.name,
+                    surname = customerEntity.surname,
+                    address = customerEntity.address,
+                    watched = customerEntity.watched + film,
+                    favorites = customerEntity.favorites
+                )
+            ).toDto()
+        } else {
+            null
+        }
+    }
 
-            )
-        )
+    suspend fun addToFavourites(customer: CustomerDto, filmDto: FilmDto): CustomerDto? {
+        val film1 = filmRepository.findById(filmDto.id)
+        val film2 = filmRepository.findById(filmDto.id)
 
+
+        val film = filmRepository.findById(filmDto.id)
+        val customerEntity = customerRepository.findById(customer.id)
+        return if (customerEntity != null && film != null) {
+            customerRepository.save(
+                CustomerEntity(
+                    id = customerEntity.id,
+                    name = customerEntity.name,
+                    surname = customerEntity.surname,
+                    address = customerEntity.address,
+                    watched = customerEntity.watched,
+                    favorites = customerEntity.favorites + film
+                )
+            ).toDto()
+        } else {
+            null
+        }
     }
 }
