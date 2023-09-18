@@ -1,1 +1,23 @@
+server:
+  port: 8083
 
+spring:
+  datasource:
+    password: dev123
+  r2dbc:
+    url: r2dbc:pool:postgres://localhost:5432/movies-db
+    username: dev
+    password: dev123
+#  flyway:
+#    url: jdbc:postgresql://localhost:5432/fin_api_test_db
+#    locations: classpath:db/migration
+#    user: ${spring.r2dbc.username}
+#    password: ${spring.r2dbc.password}
+
+logging:
+  level:
+    io.r2dbc.postgresql.QUERY: DEBUG
+    io.r2dbc.postgresql.PARAM: DEBUG
+
+settings:
+  batchSize: 1000
