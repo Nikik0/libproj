@@ -23,7 +23,9 @@ fun CustomerDto.mapToCustomerEntityAndAddress(): Pair<CustomerEntity, AddressEnt
         id = this.id,
         name = this.name,
         surname = this.surname,
-        address = address
+        address = address,
+        watched = emptyList(),
+        favorites = emptyList() //todo might need to add list to dto and refactor this
     )
     return Pair(customerEntity, address)
 }

@@ -1,26 +1,23 @@
 package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.CustomerDto
-import com.nikik0.libproj.dtos.FilmDto
-import com.nikik0.libproj.entities.AddressEntity
+import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.mappers.mapToAddress
-import com.nikik0.libproj.mappers.mapToCustomerEntityAndAddress
 import com.nikik0.libproj.mappers.toDto
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
-import com.nikik0.libproj.repositories.FilmRepository
+import com.nikik0.libproj.repositories.MovieRepository
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 class CustomerService (
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
-    private val filmRepository: FilmRepository
+    private val movieRepository: MovieRepository
         ){
+
     suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.toDto()
 
     suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
@@ -55,8 +52,8 @@ class CustomerService (
     suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
-    suspend fun addToWatched(customer: CustomerDto, filmDto: FilmDto): CustomerDto? {
-        val film = filmRepository.findById(filmDto.id)
+    suspend fun addToWatched(customer: CustomerDto, movieDto: MovieDto): CustomerDto? {
+        val film = movieRepository.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customer.id)
         return if (customerEntity != null && film != null) {
             customerRepository.save(
@@ -74,12 +71,12 @@ class CustomerService (
         }
     }
 
-    suspend fun addToFavourites(customer: CustomerDto, filmDto: FilmDto): CustomerDto? {
-        val film1 = filmRepository.findById(filmDto.id)
-        val film2 = filmRepository.findById(filmDto.id)
+    suspend fun addToFavourites(customer: CustomerDto, movieDto: MovieDto): CustomerDto? {
+        val film1 = movieRepository.findById(movieDto.id)
+        val film2 = movieRepository.findById(movieDto.id)
 
 
-        val film = filmRepository.findById(filmDto.id)
+        val film = movieRepository.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customer.id)
         return if (customerEntity != null && film != null) {
             customerRepository.save(
