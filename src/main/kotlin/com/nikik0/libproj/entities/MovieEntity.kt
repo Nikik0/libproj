@@ -11,5 +11,5 @@ data class MovieEntity(
     val actors: List<String>,
     val budget: Long,
     @Column("film_url")
-    val filmUrl: String
+    val movieUrl: String
 )
