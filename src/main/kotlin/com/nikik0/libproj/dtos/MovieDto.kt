@@ -1,10 +1,10 @@
-package com.nikik0.libproj.entities
+package com.nikik0.libproj.dtos
 
-data class FilmEntity(
+data class MovieDto(
     val id: Long,
     val name: String,
     val producer: String,
     val actors: List<String>,
     val budget: Long,
-    val filmUrl: String
+    val movieUrl: String
 )

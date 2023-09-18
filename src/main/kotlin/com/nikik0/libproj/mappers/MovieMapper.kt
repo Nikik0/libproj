@@ -1,27 +1,27 @@
 package com.nikik0.libproj.mappers
 
-import com.nikik0.libproj.dtos.FilmDto
-import com.nikik0.libproj.entities.FilmEntity
+import com.nikik0.libproj.dtos.MovieDto
+import com.nikik0.libproj.entities.MovieEntity
 import org.springframework.stereotype.Component
 
-fun FilmDto.mapToEntity() =
-    FilmEntity(
+fun MovieDto.mapToEntity() =
+    MovieEntity(
         id = this.id,
         name = this.name,
         producer = this.producer,
         actors = this.actors,
         budget = this.budget,
-        filmUrl = this.filmUrl
+        movieUrl = this.movieUrl
     )
 
-fun FilmEntity.mapToDto() =
-    FilmDto(
+fun MovieEntity.mapToDto() =
+    MovieDto(
         id = this.id,
         name = this.name,
         producer = this.producer,
         actors = this.actors,
         budget = this.budget,
-        filmUrl = this.filmUrl
+        movieUrl = this.movieUrl
     )
 
 @Component
