@@ -10,7 +10,43 @@ create table address(
     apartment_number bigint,
     additional_info varchar(100)
 );
-
+create table movie(
+    id serial primary key,
+    name varchar(100),
+    producer varchar(100),
+    budget bigint,
+    movie_url varchar(100)
+);
+create table actor(
+    id serial primary key,
+    name varchar(100),
+    surname varchar(100),
+    age varchar(100)
+);
+create table movie_actor(
+    movie_id bigint,
+    actor_id bigint,
+    foreign key (movie_id) references movie(id),
+    foreign key (actor_id) references actor(id)
+);
+create table customer(
+    id serial primary key,
+    name varchar(100),
+    surname varchar(100),
+    address_id bigint references address(id)
+);
+create table customer_watched_movies(
+    customer_id bigint,
+    watched_movie_id bigint,
+    foreign key (customer_id) references customer(id),
+    foreign key (watched_movie_id) references movie(id)
+);
+create table customer_favourite_movies(
+    customer_id bigint,
+    favourite_movie_id bigint,
+    foreign key (customer_id) references customer(id),
+    foreign key (favourite_movie_id) references movie(id)
+);
 
 
 
