@@ -10,6 +10,6 @@ data class MovieEntity(
     val producer: String,
     val actors: List<String>,
     val budget: Long,
-    @Column("film_url")
+    @Column("movie_url")
     val movieUrl: String
 )
