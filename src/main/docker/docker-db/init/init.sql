@@ -47,6 +47,28 @@ create table customer_favourite_movies(
     foreign key (customer_id) references customer(id),
     foreign key (favourite_movie_id) references movie(id)
 );
+create table tag(
+    id bigint,
+    name varchar(100)
+);
+create table tag_movie(
+    tag_id bigint,
+    movie_id bigint,
+    foreign key (tag_id) references tag(id),
+    foreign key (movie_id) references movie(id)
+);
+create table studio(
+    id bigint,
+    name varchar(100),
+    employees bigint,
+    owner varchar(100)
+);
+create table studio_movie(
+    studio_id bigint,
+    movie_id bigont,
+    foreign key (studio_id) references studio(id),
+    foreign key (movie_id) references movie(id)
+);
 
 
 
