@@ -8,7 +8,7 @@ data class MovieEntity(
     val id: Long,
     val name: String,
     val producer: String,
-    val actors: List<String>,
+    val actors: List<Actor>,
     val tags: List<MovieTag>,
     val studio: MovieStudio,
     val budget: Long,
