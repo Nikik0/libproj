@@ -1,5 +1,6 @@
 package com.nikik0.libproj.entities
 
+import org.springframework.data.annotation.Transient
 import org.springframework.data.relational.core.mapping.Table
 
 @Table("customer")
@@ -8,7 +9,9 @@ data class CustomerEntity(
     val name: String,
     val surname:String,
     val address: AddressEntity,
+    @Transient
     val watched: List<MovieEntity>,
+    @Transient
     val favorites: List<MovieEntity>
 )
 
