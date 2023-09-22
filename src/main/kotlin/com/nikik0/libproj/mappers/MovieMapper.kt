@@ -10,6 +10,8 @@ fun MovieDto.mapToEntity() =
         name = this.name,
         producer = this.producer,
         actors = this.actors,
+        tags = this.tags,
+        studio = this.studio,
         budget = this.budget,
         movieUrl = this.movieUrl
     )
@@ -20,6 +22,8 @@ fun MovieEntity.mapToDto() =
         name = this.name,
         producer = this.producer,
         actors = this.actors,
+        tags = this.tags,
+        studio = this.studio,
         budget = this.budget,
         movieUrl = this.movieUrl
     )
