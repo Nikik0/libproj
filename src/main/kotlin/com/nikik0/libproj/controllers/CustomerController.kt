@@ -2,6 +2,8 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.entities.AddressEntity
+import com.nikik0.libproj.repositories.AddressRepository
+import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.services.CustomerService
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -14,7 +16,9 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/customer")
 class CustomerController (
-    private val customerService: CustomerService
+    private val customerService: CustomerService,
+    private val customerRepository: CustomerRepository,
+    private val addressRepository: AddressRepository
         ){
     @GetMapping("/get/{id}")
     suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)
@@ -30,5 +34,9 @@ class CustomerController (
 
     @PostMapping("/add/watched")
     suspend fun addToWatchedList() = null
+
+    @GetMapping("/test")
+    suspend fun test() = customerService.getTestCustomer()
+        //CustomerDto(1,"s","a","a","b","a","a","q",1,"a",1, "a")
 
 }
