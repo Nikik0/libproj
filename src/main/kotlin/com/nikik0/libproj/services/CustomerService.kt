@@ -2,21 +2,49 @@ package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
+import com.nikik0.libproj.entities.AddressEntity
 import com.nikik0.libproj.entities.CustomerEntity
+import com.nikik0.libproj.entities.CustomerEntityUpd
 import com.nikik0.libproj.mappers.mapToAddress
 import com.nikik0.libproj.mappers.toDto
-import com.nikik0.libproj.repositories.AddressRepository
-import com.nikik0.libproj.repositories.CustomerRepository
-import com.nikik0.libproj.repositories.MovieRepository
+import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import java.util.stream.Collectors
 
 @Service
 class CustomerService (
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
-    private val movieRepository: MovieRepository
+    private val movieRepository: MovieRepository,
+    private val customerRepositoryUpd: CustomerRepositoryUpd,
+    private val customAddressRepository: CustomAddressRepository
         ){
+
+    suspend fun getTestCustomer(): CustomerEntityUpd? {
+        val customer = customerRepositoryUpd.findById(1)
+        val address1 = customer?.let { addressRepository.findById(it.addressId) }
+        customer?.address = address1
+
+        val custom = customAddressRepository.findForCustomerId(1)
+        println("from custom $custom")
+
+
+        val bruh = addressRepository.findAddressForCustomerId(2)
+        bruh.onEach { println(it) }
+        println(bruh.javaClass)
+
+
+        val smth = customerRepositoryUpd.findById(1)?.let {
+            it.address = addressRepository.findById(it.addressId)
+            it
+         }
+
+        val wtf = customerRepositoryUpd.findById(2)?.apply { address = addressRepository.findById(addressId) }
+        return wtf
+    }//?.let { it -> it.address = addressRepository.findById(it.addressId) }.let { println(it) }
 
     suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.toDto()
 
