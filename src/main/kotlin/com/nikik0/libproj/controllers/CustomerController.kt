@@ -2,6 +2,7 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.entities.AddressEntity
+import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.entities.CustomerEntityUpd
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
@@ -24,8 +25,8 @@ class CustomerController (
     @GetMapping("/get/{id}")
     suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)
 
-    @PostMapping()
-    suspend fun saveCustomer(customerDto: CustomerDto) = customerService.saveCustomer(customerDto)
+//    @PostMapping()
+//    suspend fun saveCustomer(customerDto: CustomerDto) = customerService.saveCustomer(customerDto)
 
     @DeleteMapping()
     suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto)
@@ -40,7 +41,7 @@ class CustomerController (
     suspend fun test() = customerService.getTestCustomer()
         //CustomerDto(1,"s","a","a","b","a","a","q",1,"a",1, "a")
     @PostMapping("/ugh")
-    suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntityUpd {
+    suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntity {
             println(customerDto)
             return customerService.saveNewCustomerTest(customerDto)
 //            return CustomerDto(

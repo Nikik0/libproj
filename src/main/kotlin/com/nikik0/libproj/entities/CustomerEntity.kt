@@ -1,19 +1,31 @@
 package com.nikik0.libproj.entities
 
+import org.springframework.data.annotation.Id
+import org.springframework.data.annotation.PersistenceCreator
 import org.springframework.data.annotation.Transient
+import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
 @Table("customer")
 data class CustomerEntity(
+    @Id
     val id: Long,
     val name: String,
     val surname:String,
-    val address: AddressEntity,
+    @Transient
+    var address: AddressEntity?,
     @Transient
     val watched: List<MovieEntity>,
     @Transient
-    val favorites: List<MovieEntity>
-)
+    var favorites: List<MovieEntity> = emptyList()
+) {
+    @PersistenceCreator
+    constructor(
+        id: Long,
+        name: String,
+        surname: String
+    ) : this(id, name, surname, null, emptyList())
+}
 
 /*
 
