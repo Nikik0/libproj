@@ -55,58 +55,56 @@ class CustomerService (
 
     suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
 
-    suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntityUpd {
+    suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity {
         val address = addressRepository.save(customer.mapToAddress())
-        val savedCustomer = customerRepositoryUpd.findById(customer.id)
-            ?.let {
-                customerRepositoryUpd.save(
-                    CustomerEntityUpd(
-                        id = it.id,
-                        name = it.name,
-                        surname = it.surname,
-                        addressId = 1
-                    )
-                )
-            }
-            ?: customerRepositoryUpd.save(
-                CustomerEntityUpd(
-                    id = customer.id,
-                    name = customer.name,
-                    surname = customer.surname,
-                    addressId = 1
-                )
-            )
-
-        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
-        return savedCustomer
-    }
-
-    suspend fun saveCustomer(customer: CustomerDto): CustomerDto {
-        val address = customer.mapToAddress()
-        return customerRepository.findById(customer.id)
+        val savedCustomer = customerRepository.findById(customer.id)
             ?.let {
                 customerRepository.save(
                     CustomerEntity(
                         id = it.id,
-                        name = customer.name,
-                        surname = customer.surname,
-                        address = addressRepository.save(address),
-                        watched = it.watched,
-                        favorites = it.favorites
+                        name = it.name,
+                        surname = it.surname
                     )
-                ).toDto()
+                )
             }
             ?: customerRepository.save(
                 CustomerEntity(
                     id = customer.id,
                     name = customer.name,
-                    surname = customer.surname,
-                    address = addressRepository.save(address),
-                    watched = emptyList(),
-                    favorites = emptyList()
+                    surname = customer.surname
                 )
-            ).toDto()
+            )
+        savedCustomer.address = address
+        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
+        return savedCustomer
     }
+
+//    suspend fun saveCustomer(customer: CustomerDto): CustomerDto {
+//        val address = customer.mapToAddress()
+//        return customerRepository.findById(customer.id)
+//            ?.let {
+//                customerRepository.save(
+//                    CustomerEntity(
+//                        id = it.id,
+//                        name = customer.name,
+//                        surname = customer.surname,
+//                        address = addressRepository.save(address),
+//                        watched = it.watched,
+//                        favorites = it.favorites
+//                    )
+//                ).toDto()
+//            }
+//            ?: customerRepository.save(
+//                CustomerEntity(
+//                    id = customer.id,
+//                    name = customer.name,
+//                    surname = customer.surname,
+//                    address = addressRepository.save(address),
+//                    watched = emptyList(),
+//                    favorites = emptyList()
+//                )
+//            ).toDto()
+//    }
 
     suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
@@ -133,8 +131,6 @@ class CustomerService (
     suspend fun addToFavourites(customer: CustomerDto, movieDto: MovieDto): CustomerDto? {
         val film1 = movieRepository.findById(movieDto.id)
         val film2 = movieRepository.findById(movieDto.id)
-
-
         val film = movieRepository.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customer.id)
         return if (customerEntity != null && film != null) {
