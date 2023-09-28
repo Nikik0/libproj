@@ -10,6 +10,7 @@ import com.nikik0.libproj.mappers.toDto
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import java.util.stream.Collectors
@@ -20,7 +21,8 @@ class CustomerService (
     private val addressRepository: AddressRepository,
     private val movieRepository: MovieRepository,
     private val customerRepositoryUpd: CustomerRepositoryUpd,
-    private val customAddressRepository: CustomAddressRepository
+    private val customAddressRepository: CustomAddressRepository,
+    private val manyToManyRepository: ManyToManyRepository
         ){
 
     suspend fun getTestCustomer(): CustomerEntityUpd? {
@@ -32,8 +34,11 @@ class CustomerService (
         println("from custom $custom")
 
 
+
         val bruh = addressRepository.findAddressForCustomerId(2)
-        bruh.onEach { println(it) }
+        //bruh.onEach { println(it) }
+        val list = bruh.toList().first()
+        println("list taken from flow $list")
         println(bruh.javaClass)
 
 
@@ -49,6 +54,32 @@ class CustomerService (
     suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.toDto()
 
     suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
+
+    suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntityUpd {
+        val address = addressRepository.save(customer.mapToAddress())
+        val savedCustomer = customerRepositoryUpd.findById(customer.id)
+            ?.let {
+                customerRepositoryUpd.save(
+                    CustomerEntityUpd(
+                        id = it.id,
+                        name = it.name,
+                        surname = it.surname,
+                        addressId = 1
+                    )
+                )
+            }
+            ?: customerRepositoryUpd.save(
+                CustomerEntityUpd(
+                    id = customer.id,
+                    name = customer.name,
+                    surname = customer.surname,
+                    addressId = 1
+                )
+            )
+
+        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
+        return savedCustomer
+    }
 
     suspend fun saveCustomer(customer: CustomerDto): CustomerDto {
         val address = customer.mapToAddress()
