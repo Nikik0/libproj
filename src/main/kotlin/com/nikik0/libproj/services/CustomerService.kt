@@ -57,7 +57,7 @@ class CustomerService (
 
     suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity {
         val address = addressRepository.save(customer.mapToAddress())
-        val savedCustomer = customerRepository.findById(customer.id)
+        val savedCustomer = customerRepository.findById(customer.id)  //todo might want to check if customer exists or id is null, otherwise throw exception
             ?.let {
                 customerRepository.save(
                     CustomerEntity(
