@@ -32,8 +32,7 @@ create table movie_actor(
 create table customer(
     id serial primary key,
     name varchar(100),
-    surname varchar(100),
-    address_id bigint references address(id)
+    surname varchar(100)
 );
 create table customer_watched_movies(
     customer_id bigint,
