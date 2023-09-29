@@ -10,7 +10,7 @@ data class MovieDto(
     val producer: String,
     val actors: List<Actor>,
     val tags: List<MovieTag>,
-    val studio: MovieStudio,
+    val studio: MovieStudio?,
     val budget: Long,
     val movieUrl: String
 )
