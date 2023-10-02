@@ -11,16 +11,19 @@ import org.springframework.web.bind.annotation.RestController
 
 
 @RestController
-@RequestMapping("/api/v1/film")
+@RequestMapping("/api/v1/movie")
 class MovieController (
     private val movieService: MovieService
         ){
     @GetMapping("/get/{id}")
-    suspend fun getSingle(@PathVariable id: Long) = movieService.getSingle(id)
+    suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)
 
     @GetMapping("/get/all")
     suspend fun getAll() = movieService.getAll()
 
     @PostMapping()
+    suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto)
+
+//    @PostMapping()
     suspend fun save(@RequestBody movieDto: MovieDto) = movieService.save(movieDto)
 }
