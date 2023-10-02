@@ -1,5 +1,6 @@
 package com.nikik0.libproj.entities
 
+import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import org.springframework.data.annotation.Transient
 import org.springframework.data.relational.core.mapping.Column
@@ -7,6 +8,7 @@ import org.springframework.data.relational.core.mapping.Table
 
 @Table("movie")
 data class MovieEntity(
+    @Id
     val id: Long,
     val name: String,
     val producer: String,
