@@ -8,6 +8,7 @@ import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class MovieService (
@@ -26,8 +27,8 @@ class MovieService (
         }?.mapToDto()
 
 
+    @Transactional
     suspend fun saveOne(movieDto: MovieDto) : MovieDto{
-        //todo fix bug with saving actors and stuff, id is being considered a 0
         val movie = MovieEntity(
             id = movieDto.id,
             name = movieDto.name,
