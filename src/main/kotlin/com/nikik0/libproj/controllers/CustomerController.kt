@@ -38,7 +38,7 @@ class CustomerController (
     suspend fun addToWatchedList() = null
 
     @GetMapping("/test")
-    suspend fun test() = customerService.getTestCustomer()
+    suspend fun test() = customerService.test()
         //CustomerDto(1,"s","a","a","b","a","a","q",1,"a",1, "a")
     @PostMapping("/ugh")
     suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntity {

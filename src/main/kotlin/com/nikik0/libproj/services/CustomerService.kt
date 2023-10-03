@@ -25,6 +25,9 @@ class CustomerService (
     private val manyToManyRepository: ManyToManyRepository
         ){
 
+    suspend fun test() =
+        manyToManyRepository.customerFavouriteMovieInsert(2, listOf(1, 2))
+
     suspend fun getTestCustomer(): CustomerEntityUpd? {
         val customer = customerRepositoryUpd.findById(1)
         val address1 = customer?.let { addressRepository.findById(it.addressId) }
