@@ -6,6 +6,7 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
+import reactor.kotlin.core.publisher.toFlux
 import java.util.function.Function
 
 
@@ -30,11 +31,42 @@ class ManyToManyRepository (
 
     suspend fun customerFavouriteMovieInsert(customerId: Long, movieIds: List<Long>){
         //todo this should be a batch save if i'll figure out how to do it in r2dbc kotlin
-        for (id in movieIds)
-            client.sql("INSERT into customer_favourite_movies values ($1, $2)")
-                .bind(0,customerId)
-                .bind(1, id)
-                .await()
+//        for (id in movieIds)
+//            client.sql("INSERT into customer_favourite_movies values ($1, $2)")
+//                .bind(0,customerId)
+//                .bind(1, id)
+//                .await()
+
+
+        client.inConnectionMany { connection ->
+            val statement = connection.createStatement("INSERT into customer_favourite_movies values ($1, $2)")
+//            movieIds.forEach {
+//                statement
+//                    .bind(0, customerId)
+//                    .bind(1, it)
+//                    .add()
+//            }
+            movieIds.dropLast(1).forEach {
+                statement
+                    .bind(0, customerId)
+                    .bind(1, it)
+                    .add()
+            }
+//            for (i in 0 until movieIds.size - 1){
+//                statement
+//                    .bind(0, customerId)
+//                    .bind(1, movieIds[i])
+//                    .add()
+//            }
+            statement
+                .bind(0, customerId)
+                .bind(1, movieIds[movieIds.size-1])
+
+            statement.execute().toFlux().flatMap { result ->
+                result.map { row, _ -> row.get("customer_id", Long::class.java) }
+            }
+        }.subscribe()
+        //val smth = client.sql("INSERT into customer_favourite_movies values ($1, $2)")
 //        client.inConnectionMany { connection -> {
 //            val state = connection.createStatement("INSERT into customer_favourite_movies values ($1, $2)")
 //            for (i in movieIds){
