@@ -19,7 +19,7 @@ class MovieController (
     suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)
 
     @GetMapping("/get/all")
-    suspend fun getAll() = movieService.getAll()
+    suspend fun getAll() = movieService.getAllYeager()
 
     @PostMapping()
     suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto)
