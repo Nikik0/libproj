@@ -82,6 +82,10 @@ class MovieService(
         it.mapToDto()
     }
 
+    suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
+
+
+    //isn't used, might be deleted later
     suspend fun save(movieDto: MovieDto): MovieDto {
         return movieRepository.findById(movieDto.id)
             ?.let {

@@ -18,8 +18,11 @@ class MovieController (
     @GetMapping("/get/{id}")
     suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)
 
-    @GetMapping("/get/all")
+    @GetMapping("/get/all/yeager")
     suspend fun getAll() = movieService.getAllYeager()
+
+    @GetMapping("/get/all/lazy")
+    suspend fun getAllLazy() = movieService.getAllLazy()
 
     @PostMapping()
     suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto)
