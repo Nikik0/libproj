@@ -8,16 +8,16 @@ import org.springframework.data.relational.core.mapping.Table
 data class AddressEntity(
     @Id
     val id: Long,
-    val country: String,
-    val state: String,
-    val city: String,
-    val district: String,
-    val street: String,
-    val building: Int,
+    val country: String?,
+    val state: String?,
+    val city: String?,
+    val district: String?,
+    val street: String?,
+    val building: Int?,
     @Column("building_literal")
-    val buildingLiteral: String,
+    val buildingLiteral: String?,
     @Column("apartment_number")
-    val apartmentNumber: Int,
+    val apartmentNumber: Int?,
     @Column("additional_info")
-    val additionalInfo: String
+    val additionalInfo: String?
 )
