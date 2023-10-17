@@ -1,9 +1,8 @@
 package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.CustomerDto
-import com.nikik0.libproj.entities.AddressEntity
+import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.CustomerEntity
-import com.nikik0.libproj.entities.CustomerEntityUpd
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.services.CustomerService
@@ -25,8 +24,9 @@ class CustomerController (
     @GetMapping("/get/{id}")
     suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)
 
-//    @PostMapping()
-//    suspend fun saveCustomer(customerDto: CustomerDto) = customerService.saveCustomer(customerDto)
+    @PostMapping("/save")
+    suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
+        customerService.saveCustomer(customerDto)
 
     @DeleteMapping()
     suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto)
@@ -34,8 +34,14 @@ class CustomerController (
     @GetMapping("/get/all")
     suspend fun getAllCustomers() = customerService.getAllCustomers()
 
-    @PostMapping("/add/watched")
-    suspend fun addToWatchedList() = null
+    @PostMapping("/{id}/watched/add")
+    suspend fun addToWatchedList(id: Long, movieDto: MovieDto) =
+        customerService.addToWatched(id, movieDto)
+
+
+    @PostMapping("/{id}/favourites/add")
+    suspend fun addToFavList(id: Long, movieDto: MovieDto) =
+        customerService.addToFavourites(id, movieDto)
 
     @GetMapping("/test")
     suspend fun test() = customerService.test()
