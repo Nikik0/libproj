@@ -29,18 +29,18 @@ fun CustomerDto.mapToCustomerEntityAndAddress(): Pair<CustomerEntity, AddressEnt
     return Pair(customerEntity, address)
 }
 
-fun CustomerDto.mapToAddress() = //todo refactor for null checks
+fun CustomerDto.mapToAddress() =
     AddressEntity(
         id = this.id,
-        country = this.country!!,
-        state = this.state!!,
-        city = this.city!!,
-        district = this.district!!,
-        street = this.street!!,
+        country = this.country,
+        state = this.state,
+        city = this.city,
+        district = this.district,
+        street = this.street,
         building = this.building!!,
-        buildingLiteral = this.buildingLiteral!!,
-        apartmentNumber = this.apartmentNumber!!,
-        additionalInfo = this.additionalInfo!!
+        buildingLiteral = this.buildingLiteral,
+        apartmentNumber = this.apartmentNumber,
+        additionalInfo = this.additionalInfo
     )
 
 suspend fun CustomerEntity.toDto(): CustomerDto {

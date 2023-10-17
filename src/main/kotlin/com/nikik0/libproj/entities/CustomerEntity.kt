@@ -17,14 +17,14 @@ data class CustomerEntity(
     @Transient
     val watched: List<MovieEntity>,
     @Transient
-    var favorites: List<MovieEntity> = emptyList()
+    val favorites: List<MovieEntity>
 ) {
     @PersistenceCreator
     constructor(
         id: Long,
         name: String,
         surname: String
-    ) : this(id, name, surname, null, emptyList())
+    ) : this(id, name, surname, null, emptyList(), emptyList())
 }
 
 /*
