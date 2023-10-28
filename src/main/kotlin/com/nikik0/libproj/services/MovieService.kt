@@ -29,23 +29,6 @@ class MovieService(
 
     @Transactional
     suspend fun saveOne(movieDto: MovieDto): MovieDto {
-//        val movie = MovieEntity(
-//            id = movieDto.id,
-//            name = movieDto.name,
-//            producer = movieDto.producer,
-//            actors = actorRepository.saveAll(movieDto.actors).toList(),
-//            tags = tagRepository.saveAll(movieDto.tags).toList(),
-//            studio = if (movieDto.studio != null) studioRepository.save(movieDto.studio) else null,
-//            budget = movieDto.budget,
-//            movieUrl = movieDto.movieUrl
-//        )
-//        val movieEntity = movieRepository.save(movie)
-//        manyToManyRepository.movieActorInsert(movieEntity.id, movieEntity.actors.map { it.id })
-//        manyToManyRepository.tagMovieInsert(movieEntity.tags.map { it.id }, movieEntity.id)
-//        if (movieEntity.studio != null) manyToManyRepository.studioMovieInsert(movieEntity.studio!!.id, movieEntity.id)
-//        return movieEntity.mapToDto()
-        //insert for each relation, might need to add insert for multiple values
-        //todo uncomment when tested
         val movieEntity = movieRepository.save(MovieEntity(
             id = movieDto.id,
             name = movieDto.name,
@@ -60,20 +43,7 @@ class MovieService(
         manyToManyRepository.tagMovieInsert(movieEntity.tags.map { it.id }, movieEntity.id)
         if (movieEntity.studio != null) manyToManyRepository.studioMovieInsert(movieEntity.studio!!.id, movieEntity.id)
         return movieEntity.mapToDto()
-
-
-//        val movie = movieDto.mapToEntity()
-//        val studio = movie.studio
-//        val tags = movie.tags
-//        val actors = movie.actors
-//        movie.actors = actorRepository.saveAll(actors).toList()
-//        if (studio != null) movie.studio = studioRepository.save(studio)
-//        movie.tags = tagRepository.saveAll(tags).toList()
-//        return movie.mapToDto()
     }
-
-    ///old stuff
-    suspend fun getSingle(id: Long) = movieRepository.findById(id)?.mapToDto()
 
     suspend fun getAllYeager() = movieRepository.findAll().map {
         it.actors = actorRepository.findActorsForMovie(it.id).toList()
@@ -84,18 +54,5 @@ class MovieService(
 
     suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
 
-
-    //isn't used, might be deleted later
-    suspend fun save(movieDto: MovieDto): MovieDto {
-        return movieRepository.findById(movieDto.id)
-            ?.let {
-                movieRepository.save(
-                    movieDto.mapToEntity() //todo should be different for saving partly changed entity
-                ).mapToDto()
-            }
-            ?: movieRepository.save(
-                movieDto.mapToEntity()
-            ).mapToDto()
-    }
 
 }
