@@ -44,9 +44,7 @@ class CustomerController (
     suspend fun addToFavList(id: Long, movieDto: MovieDto) =
         customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
 
-    @GetMapping("/test")
-    suspend fun test() = customerService.test()
-        //CustomerDto(1,"s","a","a","b","a","a","q",1,"a",1, "a")
+
     @PostMapping("/ugh")
     suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntity {
             println(customerDto)
