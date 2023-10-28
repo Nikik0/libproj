@@ -6,6 +6,8 @@ import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.services.CustomerService
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -17,16 +19,15 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/v1/customer")
 class CustomerController (
-    private val customerService: CustomerService,
-    private val customerRepository: CustomerRepository,
-    private val addressRepository: AddressRepository
+    private val customerService: CustomerService
         ){
     @GetMapping("/get/{id}")
-    suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)
+    suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: HttpStatus.NOT_FOUND
+
 
     @PostMapping("/save")
     suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
-        customerService.saveCustomer(customerDto)
+        customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
 
     @DeleteMapping()
     suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto)
@@ -36,16 +37,14 @@ class CustomerController (
 
     @PostMapping("/{id}/watched/add")
     suspend fun addToWatchedList(id: Long, movieDto: MovieDto) =
-        customerService.addToWatched(id, movieDto)
+        customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
 
 
     @PostMapping("/{id}/favourites/add")
     suspend fun addToFavList(id: Long, movieDto: MovieDto) =
-        customerService.addToFavourites(id, movieDto)
+        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
 
-    @GetMapping("/test")
-    suspend fun test() = customerService.test()
-        //CustomerDto(1,"s","a","a","b","a","a","q",1,"a",1, "a")
+
     @PostMapping("/ugh")
     suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntity {
             println(customerDto)
