@@ -2,8 +2,7 @@ package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.MovieEntity
-import com.nikik0.libproj.mappers.mapToDto
-import com.nikik0.libproj.mappers.mapToEntity
+import com.nikik0.libproj.entities.mapToDto
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList

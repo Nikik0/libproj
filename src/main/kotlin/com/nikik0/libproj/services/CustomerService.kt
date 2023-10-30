@@ -2,9 +2,9 @@ package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
+import com.nikik0.libproj.dtos.mapToAddress
 import com.nikik0.libproj.entities.CustomerEntity
-import com.nikik0.libproj.mappers.mapToAddress
-import com.nikik0.libproj.mappers.toDto
+import com.nikik0.libproj.entities.toDto
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
