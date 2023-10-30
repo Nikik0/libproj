@@ -22,27 +22,27 @@ class CustomerController (
     private val customerService: CustomerService
         ){
     @GetMapping("/get/{id}")
-    suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: HttpStatus.NOT_FOUND
+    suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
 
     @PostMapping("/save")
     suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
-        customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
+        customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
     @DeleteMapping()
-    suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto)
+    suspend fun deleteCustomer(customerDto: CustomerDto) = customerService.deleteCustomer(customerDto).let { ResponseEntity.ok(HttpStatus.OK) }
 
     @GetMapping("/get/all")
-    suspend fun getAllCustomers() = customerService.getAllCustomers()
+    suspend fun getAllCustomers() = customerService.getAllCustomers().let { ResponseEntity.ok(it) }
 
     @PostMapping("/{id}/watched/add")
     suspend fun addToWatchedList(id: Long, movieDto: MovieDto) =
-        customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
+        customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
 
     @PostMapping("/{id}/favourites/add")
     suspend fun addToFavList(id: Long, movieDto: MovieDto) =
-        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: HttpStatus.BAD_REQUEST
+        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
 
     @PostMapping("/ugh")
