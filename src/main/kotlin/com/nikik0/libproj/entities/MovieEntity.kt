@@ -1,10 +1,24 @@
 package com.nikik0.libproj.entities
 
+import com.nikik0.libproj.dtos.MovieDto
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import org.springframework.data.annotation.Transient
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
+
+
+fun MovieEntity.mapToDto() =
+    MovieDto(
+        id = this.id,
+        name = this.name,
+        producer = this.producer,
+        actors = this.actors,
+        tags = this.tags,
+        studio = this.studio,
+        budget = this.budget,
+        movieUrl = this.movieUrl
+    )
 
 @Table("movie")
 data class MovieEntity(
