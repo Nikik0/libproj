@@ -18,15 +18,15 @@ class MovieController (
     private val movieService: MovieService
         ){
     @GetMapping("/get/{id}")
-    suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)?.let { ResponseEntity.ok(it) } ?: HttpStatus.NOT_FOUND
+    suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @GetMapping("/get/all/yeager")
-    suspend fun getAll() = movieService.getAllYeager()
+    suspend fun getAll() = movieService.getAllYeager().let { ResponseEntity.ok(it) }
 
     @GetMapping("/get/all/lazy")
-    suspend fun getAllLazy() = movieService.getAllLazy()
+    suspend fun getAllLazy() = movieService.getAllLazy().let { ResponseEntity.ok(it) }
 
-    @PostMapping()
-    suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto)
+    @PostMapping("/save")
+    suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
 
 }
