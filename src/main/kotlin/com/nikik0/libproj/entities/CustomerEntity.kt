@@ -1,10 +1,28 @@
 package com.nikik0.libproj.entities
 
+import com.nikik0.libproj.dtos.CustomerDto
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import org.springframework.data.annotation.Transient
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
+
+fun CustomerEntity.toDto(): CustomerDto {
+    return CustomerDto(
+        id = this.id,
+        name = this.name,
+        surname = this.surname,
+        country = this.address?.country,
+        state = this.address?.state,
+        city = this.address?.city,
+        district = this.address?.district,
+        street = this.address?.street,
+        building = this.address?.building,
+        buildingLiteral = this.address?.buildingLiteral,
+        apartmentNumber = this.address?.apartmentNumber,
+        additionalInfo = this.address?.additionalInfo
+    )
+}
 
 @Table("customer")
 data class CustomerEntity(
