@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface TagRepository: CoroutineCrudRepository<MovieTag, Long> {
-    @Query("select * from tag t join tag_movie tm on t.id = tm.tag_id where tm.movie_id = :movieTagId")
-    suspend fun findTagsForMovie(movieTagId: Long): Flow<MovieTag>
+    @Query("select * from tag t join tag_movie tm on t.id = tm.tag_id where tm.movie_id = :movieId")
+    fun findTagsForMovie(movieId: Long): Flow<MovieTag>
+
+    fun findByName(name: String): Flow<MovieTag>
 }

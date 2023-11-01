@@ -29,4 +29,7 @@ class MovieController (
     @PostMapping("/save")
     suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
 
+    @GetMapping("/find/tag/{tag}")
+    suspend fun findByTag(@PathVariable tag: String) = movieService.findByTag(tag)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+
 }

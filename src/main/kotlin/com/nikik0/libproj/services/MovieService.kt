@@ -4,6 +4,8 @@ import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.MovieEntity
 import com.nikik0.libproj.entities.mapToDto
 import com.nikik0.libproj.repositories.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
@@ -52,6 +54,11 @@ class MovieService(
     }
 
     suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
+    suspend fun findByTag(tag: String) : Flow<MovieDto>{
+        val tagFromRepo = tagRepository.findByName(tag).first()
+        return movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }
+    }
+
 
 
 }
