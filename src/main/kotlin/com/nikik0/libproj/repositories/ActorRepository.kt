@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository
 interface ActorRepository: CoroutineCrudRepository<Actor, Long> {
     @Query("select * from actor act join movie_actor ma on act.id = ma.actor_id where ma.movie_id = :movieId")
     fun findActorsForMovie(movieId: Long): Flow<Actor>
+
+    suspend fun findByNameAndSurname(name: String, surname: String): Actor?
 }

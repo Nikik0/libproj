@@ -1,8 +1,7 @@
 package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.MovieDto
-import com.nikik0.libproj.entities.MovieEntity
-import com.nikik0.libproj.entities.mapToDto
+import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -28,15 +27,24 @@ class MovieService(
         }?.mapToDto()
 
 
+    suspend fun saveActorIfNotPresent(actor: Actor) =
+        actorRepository.findByNameAndSurname(actor.name, actor.surname)?:actorRepository.save(actor)
+
+    suspend fun saveTagIfNotPresent(tag: MovieTag) =
+        tagRepository.findByName(tag.name)?:tagRepository.save(tag)
+
+    suspend fun saveStudioIfNotPresent(studio: MovieStudio) =
+        studioRepository.findByName(studio.name)?:studioRepository.save(studio)
+
     @Transactional
     suspend fun saveOne(movieDto: MovieDto): MovieDto {
         val movieEntity = movieRepository.save(MovieEntity(
             id = movieDto.id,
             name = movieDto.name,
             producer = movieDto.producer,
-            actors = actorRepository.saveAll(movieDto.actors).toList(), //todo check if entities exist
-            tags = tagRepository.saveAll(movieDto.tags).toList(),
-            studio = if (movieDto.studio != null) studioRepository.save(movieDto.studio) else null,
+            actors = movieDto.actors.map { saveActorIfNotPresent(it) },
+            tags = movieDto.tags.map { saveTagIfNotPresent(it) },
+            studio = if (movieDto.studio != null) saveStudioIfNotPresent(movieDto.studio) else null,
             budget = movieDto.budget,
             movieUrl = movieDto.movieUrl
         ))
@@ -55,7 +63,7 @@ class MovieService(
 
     suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
     suspend fun findByTag(tag: String) : Flow<MovieDto>{
-        val tagFromRepo = tagRepository.findByName(tag).first()
+        val tagFromRepo = tagRepository.findByName(tag)!!
         return movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }
     }
 
