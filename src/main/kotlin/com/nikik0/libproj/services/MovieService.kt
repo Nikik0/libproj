@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class MovieService(
     private val movieRepository: MovieRepository,
-    private val actorRepository: ActorRepository,
+    private val actorService: ActorService,
     private val studioRepository: StudioRepository,
     private val tagRepository: TagRepository,
     private val manyToManyRepository: ManyToManyRepository
@@ -21,14 +21,10 @@ class MovieService(
 
     suspend fun getOne(id: Long) =
         movieRepository.findById(id)?.apply {
-            this.actors = actorRepository.findActorsForMovie(this.id).toList()
+            this.actors = actorService.findActorsForMovie(this.id)
             this.studio = studioRepository.findStudioForMovie(this.id).toList().first()
             this.tags = tagRepository.findTagsForMovie(this.id).toList()
         }?.mapToDto()
-
-
-    suspend fun saveActorIfNotPresent(actor: Actor) =
-        actorRepository.findByNameAndSurname(actor.name, actor.surname)?:actorRepository.save(actor)
 
     suspend fun saveTagIfNotPresent(tag: MovieTag) =
         tagRepository.findByName(tag.name)?:tagRepository.save(tag)
@@ -42,7 +38,7 @@ class MovieService(
             id = movieDto.id,
             name = movieDto.name,
             producer = movieDto.producer,
-            actors = movieDto.actors.map { saveActorIfNotPresent(it) },
+            actors = movieDto.actors.map { actorService.saveActorIfNotPresent(it) },
             tags = movieDto.tags.map { saveTagIfNotPresent(it) },
             studio = if (movieDto.studio != null) saveStudioIfNotPresent(movieDto.studio) else null,
             budget = movieDto.budget,
@@ -55,7 +51,7 @@ class MovieService(
     }
 
     suspend fun getAllYeager() = movieRepository.findAll().map {
-        it.actors = actorRepository.findActorsForMovie(it.id).toList()
+        it.actors = actorService.findActorsForMovie(it.id)
         it.studio = studioRepository.findStudioForMovie(it.id).toList().first()
         it.tags = tagRepository.findTagsForMovie(it.id).toList()
         it.mapToDto()
