@@ -15,7 +15,7 @@ class MovieService(
     private val movieRepository: MovieRepository,
     private val actorService: ActorService,
     private val studioRepository: StudioRepository,
-    private val tagRepository: TagRepository,
+    private val tagService: TagService,
     private val manyToManyRepository: ManyToManyRepository
 ) {
 
@@ -23,11 +23,8 @@ class MovieService(
         movieRepository.findById(id)?.apply {
             this.actors = actorService.findActorsForMovie(this.id)
             this.studio = studioRepository.findStudioForMovie(this.id).toList().first()
-            this.tags = tagRepository.findTagsForMovie(this.id).toList()
+            this.tags = tagService.findTagsForMovie(this.id)
         }?.mapToDto()
-
-    suspend fun saveTagIfNotPresent(tag: MovieTag) =
-        tagRepository.findByName(tag.name)?:tagRepository.save(tag)
 
     suspend fun saveStudioIfNotPresent(studio: MovieStudio) =
         studioRepository.findByName(studio.name)?:studioRepository.save(studio)
@@ -39,7 +36,7 @@ class MovieService(
             name = movieDto.name,
             producer = movieDto.producer,
             actors = movieDto.actors.map { actorService.saveActorIfNotPresent(it) },
-            tags = movieDto.tags.map { saveTagIfNotPresent(it) },
+            tags = movieDto.tags.map { tagService.saveTagIfNotPresent(it) },
             studio = if (movieDto.studio != null) saveStudioIfNotPresent(movieDto.studio) else null,
             budget = movieDto.budget,
             movieUrl = movieDto.movieUrl
@@ -53,14 +50,14 @@ class MovieService(
     suspend fun getAllYeager() = movieRepository.findAll().map {
         it.actors = actorService.findActorsForMovie(it.id)
         it.studio = studioRepository.findStudioForMovie(it.id).toList().first()
-        it.tags = tagRepository.findTagsForMovie(it.id).toList()
+        it.tags = tagService.findTagsForMovie(it.id)
         it.mapToDto()
     }
 
     suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
-    suspend fun findByTag(tag: String) : Flow<MovieDto>{
-        val tagFromRepo = tagRepository.findByName(tag)!!
-        return movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }
+    suspend fun findByTag(tag: String) : Flow<MovieDto>? {
+        val tagFromRepo = tagService.findByName(tag)
+        return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() } else null
     }
 
 
