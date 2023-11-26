@@ -17,6 +17,8 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import org.assertj.core.api.Assertions.*
+import org.json.JSONObject
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.http.HttpEntity
@@ -45,19 +47,41 @@ class IntegrationTests(
          */
 
         // Kotlin 1.5.30
-        @Container
-        val container = PostgreSQLContainer(DockerImageName.parse("postgres:13-alpine"))
-            .withDatabaseName("movies-db")
-            .withUsername("dev")
-            .withPassword("dev123")
-            .withInitScript("init.sql")
+//        @Container
+//        val container = PostgreSQLContainer(DockerImageName.parse("postgres:13-alpine"))
+//            .withDatabaseName("movies-db")
+//            .withUsername("dev")
+//            .withPassword("dev123")
+//            .withInitScript("init.sql")
+//
+//
+//        @JvmStatic
+//        @DynamicPropertySource
+//        fun datasourceConfig(registry: DynamicPropertyRegistry) {
+//            registry.add("spring.datasource.url", container::getJdbcUrl)
+//            registry.add("spring.datasource.password", container::getPassword)
+//            registry.add("spring.datasource.username", container::getUsername)
+//        }
+        private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
+            .apply {
+                this.withDatabaseName("movies-db").withUsername("dev").withPassword("dev123").withInitScript("init.sql")
+            }
 
         @JvmStatic
         @DynamicPropertySource
-        fun datasourceConfig(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url", container::getJdbcUrl)
-            registry.add("spring.datasource.password", container::getPassword)
-            registry.add("spring.datasource.username", container::getUsername)
+        fun properties(registry: DynamicPropertyRegistry) {
+            registry.add("spring.r2dbc.url", Companion::r2dbcUrl)
+            registry.add("spring.r2dbc.username", postgres::getUsername)
+            registry.add("spring.r2dbc.password", postgres::getPassword)
+        }
+        fun r2dbcUrl(): String {
+            return "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/${postgres.databaseName}"
+        }
+
+        @JvmStatic
+        @BeforeAll
+        internal fun setUp(): Unit {
+            postgres.start()
         }
     }
 
@@ -107,6 +131,7 @@ class IntegrationTests(
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
+        JSONObject("sd")
         val entity = client.postForEntity("/api/v1/movie/save", movieDto, MovieDto::class.java)
         assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
         println("saved this $entity")
