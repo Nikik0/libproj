@@ -46,23 +46,40 @@ class CustomerController (
 
 
     @PostMapping("/ugh")
-    suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerEntity {
+    suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerDto {
             println(customerDto)
-            return customerService.saveNewCustomerTest(customerDto)
-//            return CustomerDto(
-//                 2,
-//             "Dad",
-//             "Dew",
-//             "dasd",
-//             "eew",
-//             "ee",
-//             "rr",
-//             "qwe",
-//             1,
-//             "asd",
-//             23,
-//             "asd"
-//            )
+//            return customerService.saveNewCustomerTest(customerDto)
+            return CustomerDto(
+                 2,
+             "Dad",
+             "Dew",
+             "dasd",
+             "eew",
+             "ee",
+             "rr",
+             "qwe",
+             1,
+             "asd",
+             23,
+             "asd"
+            )
         }
-
+    @GetMapping("/testget")
+    suspend fun testGet(): CustomerDto {
+//            return customerService.saveNewCustomerTest(customerDto)
+        return CustomerDto(
+            2,
+            "Dad",
+            "Dew",
+            "dasd",
+            "eew",
+            "ee",
+            "rr",
+            "qwe",
+            1,
+            "asd",
+            23,
+            "asd"
+        )
+    }
 }
