@@ -19,6 +19,7 @@ import org.testcontainers.utility.DockerImageName
 import org.assertj.core.api.Assertions.*
 import org.json.JSONObject
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.http.HttpEntity
@@ -95,8 +96,44 @@ class IntegrationTests(
         assertThat(entity.body?.name).contains("Dad")
     }
 
-    @Test
-    fun `test saving`() {
+    private var movieSavedDummy: MovieDto? = null
+
+    private val movieUnsavedDummy: String = """
+            {
+                "name": "First Test Movie",
+                "producer": "First Test Producer",
+                "actors": [
+                    {
+                        "name": "First Actor name",
+                        "surname": "First Actor surname",
+                        "age": 20
+                    },
+                    {
+                        "name": "Second Actor name",
+                        "surname": "Second Actor surname",
+                        "age": 30
+                    }
+                ],
+                "tags": [
+                    {
+                        "name": "Horror"
+                    },
+                    {
+                        "name": "Action"
+                    }
+                ],
+                "studio": {
+                    "name": "First Test Studio",
+                    "employees": 2000,
+                    "owner": "First Studio Owner"
+                },
+                "budget": 2000000,
+                "movieUrl": "someurl.com/url"
+            }
+        """.trimIndent()
+
+    @BeforeEach
+    fun setupTestMovie() {
         val actorOne = Actor(
             id = 1L,
             name = "First Actor name",
@@ -123,7 +160,7 @@ class IntegrationTests(
             employees = 2000L,
             owner = "First Studio Owner"
         )
-        val movieDto = MovieDto(
+        movieSavedDummy = MovieDto(
             id = 1L,
             name = "First Test Movie",
             producer = "First Test Producer",
@@ -133,54 +170,26 @@ class IntegrationTests(
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
-        val stringMovie = """
-            {
-                "name": "Car Crash",
-                "producer": "Kate Stolk",
-                "actors": [
-                    {
-                        "name": "Deri",
-                        "surname": "Aaron",
-                        "age": 43
-                    },
-                    {
-                        "name": "Lizzy",
-                        "surname": "Allen",
-                        "age": 23
-                    }
-                ],
-                "tags": [
-                    {
-                        "name": "Horror"
-                    },
-                    {
-                        "name": "Documentary"
-                    }
-                ],
-                "studio": {
-                    "name": "Top studio",
-                    "employees": 333,
-                    "owner": "Neear D.R."
-                },
-                "budget": 23000000,
-                "movieUrl": "smth.com/hherErw"
-            }
-        """.trimIndent()
-        println(stringMovie)
-        val json = JSONObject(stringMovie)
-        println("json is $json")
-//        JSONObject("sd")
-//        val entity = client.postForEntity("/api/v1/movie/save", json, String::class.java)
-//        println(entity)
-        val headers = HttpHeaders()
-        headers.contentType = MediaType.APPLICATION_JSON
-        val response = HttpEntity<String>(json.toString(),headers)
-        val entity = client.postForObject("/api/v1/movie/save", response, MovieDto::class.java)
-        println(entity)
-//        assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
-//        println("saved this $entity")
+    }
+
+    @Test
+    fun `test saving`() {
+        val request = createTestJsonRequest(movieUnsavedDummy)
+        val entity = client.postForEntity("/api/v1/movie/save", request, MovieDto::class.java)
+//
+//        val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
+//        assertThat(entity).isEqualTo(retrievedEntity)
+        assertThat(entity.body).isEqualTo(movieSavedDummy)
+    }
+
+    private fun createTestJsonRequest(string: String) =
+        HttpEntity<String>(string, HttpHeaders().apply { this.contentType = MediaType.APPLICATION_JSON } )
+
+
+    @Test
+    fun `test getting`() {
         val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
+        assertThat(retrievedEntity.body).isEqualTo(movieSavedDummy)
         println("got this $retrievedEntity")
-        assertThat(entity).isEqualTo(retrievedEntity.body)
     }
 }
