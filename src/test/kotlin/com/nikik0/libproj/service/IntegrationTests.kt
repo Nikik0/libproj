@@ -22,7 +22,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 
 
 @SpringBootTest(
@@ -131,12 +133,54 @@ class IntegrationTests(
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
-        JSONObject("sd")
-        val entity = client.postForEntity("/api/v1/movie/save", movieDto, MovieDto::class.java)
-        assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
-        println("saved this $entity")
+        val stringMovie = """
+            {
+                "name": "Car Crash",
+                "producer": "Kate Stolk",
+                "actors": [
+                    {
+                        "name": "Deri",
+                        "surname": "Aaron",
+                        "age": 43
+                    },
+                    {
+                        "name": "Lizzy",
+                        "surname": "Allen",
+                        "age": 23
+                    }
+                ],
+                "tags": [
+                    {
+                        "name": "Horror"
+                    },
+                    {
+                        "name": "Documentary"
+                    }
+                ],
+                "studio": {
+                    "name": "Top studio",
+                    "employees": 333,
+                    "owner": "Neear D.R."
+                },
+                "budget": 23000000,
+                "movieUrl": "smth.com/hherErw"
+            }
+        """.trimIndent()
+        println(stringMovie)
+        val json = JSONObject(stringMovie)
+        println("json is $json")
+//        JSONObject("sd")
+//        val entity = client.postForEntity("/api/v1/movie/save", json, String::class.java)
+//        println(entity)
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        val response = HttpEntity<String>(json.toString(),headers)
+        val entity = client.postForObject("/api/v1/movie/save", response, MovieDto::class.java)
+        println(entity)
+//        assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
+//        println("saved this $entity")
         val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
         println("got this $retrievedEntity")
-        assertThat(entity).isEqualTo(retrievedEntity)
+        assertThat(entity).isEqualTo(retrievedEntity.body)
     }
 }
