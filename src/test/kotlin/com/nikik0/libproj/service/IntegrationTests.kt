@@ -5,6 +5,7 @@ import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.Actor
 import com.nikik0.libproj.entities.MovieStudio
 import com.nikik0.libproj.entities.MovieTag
+import kotlinx.coroutines.flow.Flow
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -21,11 +22,16 @@ import org.json.JSONObject
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
 import org.springframework.boot.test.web.client.getForEntity
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.web.reactive.function.BodyInserter
+import org.springframework.web.reactive.function.BodyInserters
 
 
 @SpringBootTest(
@@ -34,7 +40,9 @@ import org.springframework.http.MediaType
 @Testcontainers
 class IntegrationTests(
     @Autowired
-    val client: TestRestTemplate
+    val client: TestRestTemplate,
+    @Autowired
+    val webClient: WebTestClient
 //    @Autowired
 //    val jdbc: JdbcTemplate
 ) {
@@ -92,7 +100,7 @@ class IntegrationTests(
     fun `test hello endpoint`() {
         val entity = client.getForEntity<CustomerDto>("/api/v1/customer/testget")
         assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
-        println(entity)
+//        println(entity)
         assertThat(entity.body?.name).contains("Dad")
     }
 
@@ -175,11 +183,11 @@ class IntegrationTests(
     @Test
     fun `test saving`() {
         val request = createTestJsonRequest(movieUnsavedDummy)
-        val entity = client.postForEntity("/api/v1/movie/save", request, MovieDto::class.java)
-//
-//        val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
-//        assertThat(entity).isEqualTo(retrievedEntity)
-        assertThat(entity.body).isEqualTo(movieSavedDummy)
+        val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+//        val entity = client.postForEntity("/api/v1/movie/save", request, MovieDto::class.java)
+        println("got this from webclient $entity")
+        assertThat(entity).isEqualTo(movieSavedDummy)
     }
 
     private fun createTestJsonRequest(string: String) =
@@ -188,8 +196,17 @@ class IntegrationTests(
 
     @Test
     fun `test getting`() {
-        val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
-        assertThat(retrievedEntity.body).isEqualTo(movieSavedDummy)
-        println("got this $retrievedEntity")
+        val retrievedEntity = webClient.get().uri("/api/v1/movie/get/1").exchange().returnResult<MovieDto>()
+            .responseBody.blockLast()
+//        val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
+        assertThat(retrievedEntity).isEqualTo(movieSavedDummy)
+//        println("got this $retrievedEntity")
+    }
+
+//    @Test
+    fun `get yeager should return movies with info abt actors etc`(){
+        val retrievedListOfMovies = client.getForEntity<Any>("/api/v1/movie/get/all/yeager")
+        println("started yeager test")
+        println("list of ent $retrievedListOfMovies")
     }
 }
