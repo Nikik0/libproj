@@ -21,6 +21,7 @@ import org.assertj.core.api.Assertions.*
 import org.json.JSONObject
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.params.ParameterizedTest
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
 import org.springframework.boot.test.web.client.getForEntity
@@ -181,12 +182,13 @@ class IntegrationTests(
     }
 
     @Test
+    @Order(1)
     fun `test saving`() {
         val request = createTestJsonRequest(movieUnsavedDummy)
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
 //        val entity = client.postForEntity("/api/v1/movie/save", request, MovieDto::class.java)
-        println("got this from webclient $entity")
+//        println("got this from webclient $entity")
         assertThat(entity).isEqualTo(movieSavedDummy)
     }
 
@@ -195,6 +197,7 @@ class IntegrationTests(
 
 
     @Test
+    @Order(2)
     fun `test getting`() {
         val retrievedEntity = webClient.get().uri("/api/v1/movie/get/1").exchange().returnResult<MovieDto>()
             .responseBody.blockLast()
@@ -203,10 +206,24 @@ class IntegrationTests(
 //        println("got this $retrievedEntity")
     }
 
-//    @Test
+    //todo yeager returns empty list smh, need further investigation
+    @Test
+    @Order(3)
     fun `get yeager should return movies with info abt actors etc`(){
-        val retrievedListOfMovies = client.getForEntity<Any>("/api/v1/movie/get/all/yeager")
+        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
+            .exchange().expectBodyList(MovieDto::class.java)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(3)
+//        val retrievedListOfMovies = client.getForEntity<Any>("/api/v1/movie/get/all/yeager")
         println("started yeager test")
-        println("list of ent $retrievedListOfMovies")
+//        println("list of ent $retrievedListOfMovies")
+    }
+
+    @Test
+    @Order(4)
+    fun `test get multiple`(){
+        val list = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(1)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+        println("list from lazy $list")
     }
 }
