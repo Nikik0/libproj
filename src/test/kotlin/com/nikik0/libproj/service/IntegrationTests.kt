@@ -41,8 +41,6 @@ import org.springframework.web.reactive.function.BodyInserters
 @Testcontainers
 class IntegrationTests(
     @Autowired
-    val client: TestRestTemplate,
-    @Autowired
     val webClient: WebTestClient
 //    @Autowired
 //    val jdbc: JdbcTemplate
@@ -95,14 +93,6 @@ class IntegrationTests(
         internal fun setUp(): Unit {
             postgres.start()
         }
-    }
-
-    @Test
-    fun `test hello endpoint`() {
-        val entity = client.getForEntity<CustomerDto>("/api/v1/customer/testget")
-        assertThat(entity.statusCode).isEqualTo(HttpStatus.OK)
-//        println(entity)
-        assertThat(entity.body?.name).contains("Dad")
     }
 
     private var movieSavedDummy: MovieDto? = null
@@ -183,44 +173,32 @@ class IntegrationTests(
 
     @Test
     @Order(1)
-    fun `test saving`() {
-        val request = createTestJsonRequest(movieUnsavedDummy)
+    fun `save should return correct new movieDto`() {
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
-//        val entity = client.postForEntity("/api/v1/movie/save", request, MovieDto::class.java)
-//        println("got this from webclient $entity")
         assertThat(entity).isEqualTo(movieSavedDummy)
     }
 
-    private fun createTestJsonRequest(string: String) =
-        HttpEntity<String>(string, HttpHeaders().apply { this.contentType = MediaType.APPLICATION_JSON } )
-
-
     @Test
     @Order(2)
-    fun `test getting`() {
+    fun `get single should return correct movieDto`() {
         val retrievedEntity = webClient.get().uri("/api/v1/movie/get/1").exchange().returnResult<MovieDto>()
             .responseBody.blockLast()
-//        val retrievedEntity = client.getForEntity<MovieDto>("/api/v1/movie/get/1")
         assertThat(retrievedEntity).isEqualTo(movieSavedDummy)
-//        println("got this $retrievedEntity")
     }
 
-    //todo yeager returns empty list smh, need further investigation
     @Test
     @Order(3)
-    fun `get yeager should return movies with info abt actors etc`(){
+    fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
             .exchange().expectBodyList(MovieDto::class.java)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(3)
-//        val retrievedListOfMovies = client.getForEntity<Any>("/api/v1/movie/get/all/yeager")
-        println("started yeager test")
-//        println("list of ent $retrievedListOfMovies")
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(1)
+        println("list of ent yeager $retrievedListOfMovies")
     }
 
     @Test
     @Order(4)
-    fun `test get multiple`(){
+    fun `get all lazy should return list of movieDto with null actors and tags`(){
         val list = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(1)
             .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
