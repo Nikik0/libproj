@@ -46,32 +46,6 @@ class IntegrationTests(
 //    val jdbc: JdbcTemplate
 ) {
     companion object {
-        /*
-                @Container
-        val container = postgres("13-alpine") {
-            withDatabaseName("db")
-            withUsername("user")
-            withPassword("password")
-            withInitScript("sql/schema.sql")
-        }
-         */
-
-        // Kotlin 1.5.30
-//        @Container
-//        val container = PostgreSQLContainer(DockerImageName.parse("postgres:13-alpine"))
-//            .withDatabaseName("movies-db")
-//            .withUsername("dev")
-//            .withPassword("dev123")
-//            .withInitScript("init.sql")
-//
-//
-//        @JvmStatic
-//        @DynamicPropertySource
-//        fun datasourceConfig(registry: DynamicPropertyRegistry) {
-//            registry.add("spring.datasource.url", container::getJdbcUrl)
-//            registry.add("spring.datasource.password", container::getPassword)
-//            registry.add("spring.datasource.username", container::getUsername)
-//        }
         private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
             .apply {
                 this.withDatabaseName("movies-db").withUsername("dev").withPassword("dev123").withInitScript("init.sql")
