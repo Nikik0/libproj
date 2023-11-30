@@ -97,7 +97,7 @@ class IntegrationTests(
 
     private var movieSavedDummy: MovieDto? = null
 
-    private val movieUnsavedDummy: String = """
+    private val movieUnsavedFirstDummy: String = """
             {
                 "name": "First Test Movie",
                 "producer": "First Test Producer",
@@ -128,6 +128,40 @@ class IntegrationTests(
                 },
                 "budget": 2000000,
                 "movieUrl": "someurl.com/url"
+            }
+        """.trimIndent()
+
+    private val movieUnsavedSecondDummy: String = """
+            {
+                "name": "Second Test Movie",
+                "producer": "Second Test Producer",
+                "actors": [
+                    {
+                        "name": "Third Actor name",
+                        "surname": "Third Actor surname",
+                        "age": 20
+                    },
+                    {
+                        "name": "Forth Actor name",
+                        "surname": "Forth Actor surname",
+                        "age": 30
+                    }
+                ],
+                "tags": [
+                    {
+                        "name": "Mystic"
+                    },
+                    {
+                        "name": "Action"
+                    }
+                ],
+                "studio": {
+                    "name": "Second Test Studio",
+                    "employees": 2000,
+                    "owner": "Second Studio Owner"
+                },
+                "budget": 2000000,
+                "movieUrl": "someurl.com/url2"
             }
         """.trimIndent()
 
@@ -175,8 +209,11 @@ class IntegrationTests(
     @Order(1)
     fun `save should return correct new movieDto`() {
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-            .bodyValue(movieUnsavedDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+            .bodyValue(movieUnsavedFirstDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
         assertThat(entity).isEqualTo(movieSavedDummy)
+        webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+
     }
 
     @Test
@@ -190,8 +227,8 @@ class IntegrationTests(
     @Order(3)
     fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
-            .exchange().expectBodyList(MovieDto::class.java)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(1)
+            .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
@@ -204,13 +241,26 @@ class IntegrationTests(
     @Order(4)
     fun `get all lazy should return list of movieDto with null actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
-            .expectBodyList(MovieDto::class.java).hasSize(1)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(1)
+            .expectBodyList(MovieDto::class.java).hasSize(2)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
         val tags = dto?.tags
         assertThat(actors).isEmpty()
         assertThat(tags).isEmpty()
+    }
+
+    @Test
+    @Order(5)
+    fun `get by tag returns correct amount of dtos`(){
+        webClient.get().uri("/api/v1/movie/find/tag/Horror").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(1)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+            .returnResult()
+        webClient.get().uri("/api/v1/movie/find/tag/Action").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(2)
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+            .returnResult()
     }
 }
