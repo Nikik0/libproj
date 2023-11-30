@@ -186,22 +186,31 @@ class IntegrationTests(
             .responseBody.blockLast()
         assertThat(retrievedEntity).isEqualTo(movieSavedDummy)
     }
-
     @Test
     @Order(3)
     fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
             .exchange().expectBodyList(MovieDto::class.java)
             .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(1)
-        println("list of ent yeager $retrievedListOfMovies")
+            .returnResult()
+        val dto = retrievedListOfMovies.responseBody?.get(0)
+        val actors = dto?.actors
+        val tags = dto?.tags
+        assertThat(actors).isNotNull.isNotEmpty
+        assertThat(tags).isNotNull.isNotEmpty
     }
 
     @Test
     @Order(4)
     fun `get all lazy should return list of movieDto with null actors and tags`(){
-        val list = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
+        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(1)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
-        println("list from lazy $list")
+            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println).hasSize(1)
+            .returnResult()
+        val dto = retrievedListOfMovies.responseBody?.get(0)
+        val actors = dto?.actors
+        val tags = dto?.tags
+        assertThat(actors).isEmpty()
+        assertThat(tags).isEmpty()
     }
 }
