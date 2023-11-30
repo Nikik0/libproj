@@ -13,4 +13,6 @@ interface TagRepository: CoroutineCrudRepository<MovieTag, Long> {
 
     suspend fun findByName(name: String): MovieTag?
 
+    suspend fun findByNameIgnoreCase(name: String): MovieTag?
+
 }
