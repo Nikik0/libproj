@@ -17,5 +17,5 @@ class TagService(
         tagRepository.findTagsForMovie(movieId).toList()
 
     suspend fun findByName(name: String) =
-        tagRepository.findByName(name)
+        tagRepository.findByNameIgnoreCase(name)
 }
