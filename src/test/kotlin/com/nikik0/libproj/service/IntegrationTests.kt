@@ -2,9 +2,7 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
-import com.nikik0.libproj.entities.Actor
-import com.nikik0.libproj.entities.MovieStudio
-import com.nikik0.libproj.entities.MovieTag
+import com.nikik0.libproj.entities.*
 import kotlinx.coroutines.flow.Flow
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,6 +66,40 @@ class IntegrationTests(
             postgres.start()
         }
     }
+
+    private var customerSavedDummy: CustomerDto? = null
+
+    private val customerUnsavedFirstDummy: String = """
+        {
+            "name": "First name",
+            "surname": "First Surname",
+            "country": "First country",
+            "state": "First state",
+            "city": "First city",
+            "district": "First district",
+            "street": "First street",
+            "building": 1,
+            "buildingLiteral": "First literal",
+            "apartmentNumber": 23,
+            "additionalInfo": "First additional info"
+        }
+    """.trimIndent()
+
+    private val customerUnsavedSecondDummy: String = """
+                {
+                    "name": "Second name",
+                    "surname": "Second Surname",
+                    "country": "Second country",
+                    "state": "Second state",
+                    "city": "Second city",
+                    "district": "Second district",
+                    "street": "Second street",
+                    "building": 1,
+                    "buildingLiteral": "Second literal",
+                    "apartmentNumber": 23,
+                    "additionalInfo": "Second additional info"
+                }
+    """.trimIndent()
 
     private var movieSavedDummy: MovieDto? = null
 
@@ -140,6 +172,30 @@ class IntegrationTests(
         """.trimIndent()
 
     @BeforeEach
+    fun setupTestCustomer(){
+        val address = AddressEntity(
+            id = 1,
+            country = "First country",
+            state = "First state",
+            city = "First city",
+            district = "First district",
+            street = "First street",
+            building = 1,
+            buildingLiteral = "First literal",
+            apartmentNumber = 23,
+            additionalInfo = "First additional info"
+        )
+        customerSavedDummy = CustomerEntity(
+            id = 1,
+            name = "First name",
+            surname = "First Surname",
+            address = address,
+            watched = emptyList(),
+            favorites = emptyList()
+        ).toDto()
+    }
+
+    @BeforeEach
     fun setupTestMovie() {
         val actorOne = Actor(
             id = 1L,
@@ -202,7 +258,7 @@ class IntegrationTests(
     fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
             .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+            //.consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
@@ -216,7 +272,7 @@ class IntegrationTests(
     fun `get all lazy should return list of movieDto with null actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(2)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+            //.consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
@@ -230,11 +286,48 @@ class IntegrationTests(
     fun `get by tag returns correct amount of dtos`(){
         webClient.get().uri("/api/v1/movie/find/tag/Horror").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(1)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+//            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         webClient.get().uri("/api/v1/movie/find/tag/Action").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(2)
-            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
+//            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
     }
+
+    @Test
+    @Order(6)
+    fun `save customer returns correct customer dto`(){
+        val customerDto = webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(customerUnsavedFirstDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerDto).isEqualTo(customerSavedDummy)
+        webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(customerUnsavedSecondDummy).exchange().returnResult<CustomerDto>()
+    }
+
+    @Test
+    @Order(7)
+    fun `get customer returns single customerDto`(){
+        val customerDto = webClient.get().uri("/api/v1/customer/get/1").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerDto).isEqualTo(customerSavedDummy)
+    }
+
+    @Test
+    @Order(8)
+    fun `get all customers returns correct number of dtos`(){
+        webClient.get().uri("/api/v1/customer/get/all").exchange()
+            .expectBodyList(CustomerDto::class.java).hasSize(2)
+            .returnResult().responseBody
+    }
+
+    @Test
+    @Order(9)
+    fun `add to watched returns dto with correct watched list`(){
+        val customer = webClient.post().uri("/api/v1/customer/1/watched/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+    }
+
+
 }
