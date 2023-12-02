@@ -57,6 +57,12 @@ class MovieService(
         return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() } else null
     }
 
+    suspend fun findFavMoviesForCustomerId(customerId: Long) =
+        movieRepository.findFavMoviesForCustomerId(customerId)
 
+    suspend fun findWatchedMoviesForCustomerId(customerId: Long) =
+        movieRepository.findWatchedMoviesForCustomerId(customerId)
 
+    suspend fun findById(movieId: Long) =
+        movieRepository.findById(movieId)
 }

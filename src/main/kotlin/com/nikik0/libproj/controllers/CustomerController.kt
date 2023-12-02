@@ -36,13 +36,25 @@ class CustomerController (
     suspend fun getAllCustomers() = customerService.getAllCustomers().let { ResponseEntity.ok(it) }
 
     @PostMapping("/{id}/watched/add")
-    suspend fun addToWatchedList(id: Long, movieDto: MovieDto) =
-        customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+    suspend fun addToWatchedList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
+        customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) }
+                ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+
+    //todo refactor customer to include yeager init for dto that includes watched and fav lists
+    //todo add complicated saving for watched and favs in db
 
 
     @PostMapping("/{id}/favourites/add")
-    suspend fun addToFavList(id: Long, movieDto: MovieDto) =
-        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto): ResponseEntity<CustomerDto> {
+        val tt = customerService.addToFavourites(id, movieDto)
+        println(tt)
+        return tt?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+    }
+
+//    @PostMapping("/{id}/favourites/add")
+//    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
+//        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
 
     @PostMapping("/ugh")
@@ -61,7 +73,9 @@ class CustomerController (
              1,
              "asd",
              23,
-             "asd"
+             "asd",
+                emptyList(),
+                emptyList()
             )
         }
     @GetMapping("/testget")
@@ -79,7 +93,9 @@ class CustomerController (
             1,
             "asd",
             23,
-            "asd"
+            "asd",
+            emptyList(),
+            emptyList()
         )
     }
 }
