@@ -5,7 +5,9 @@ import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToAddress
 import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.entities.toDto
+import com.nikik0.libproj.entities.toDtoYeager
 import com.nikik0.libproj.repositories.*
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.springframework.stereotype.Service
@@ -23,9 +25,7 @@ class CustomerService (
 
     suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.apply {
         this.address = addressRepository.findAddressForCustomerId(this.id).toList().first()
-        this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
-        this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-    }?.toDto()
+    }?.toDtoYeager()
 
     suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
 
@@ -81,7 +81,9 @@ class CustomerService (
             )
         }
         manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
-        return customerEntity.toDto()
+        return customerEntity.apply {
+            this.address = addressRepository.findAddressForCustomerId(this.id).first()
+        }.toDto()
     }
 
     suspend fun deleteCustomer(customer: CustomerDto) =
@@ -104,10 +106,8 @@ class CustomerService (
                     favorites = customerEntity.favorites
                 )
             ).apply {
-                this.address = addressRepository.findAddressForCustomerId(this.id).toList().first()
-                this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
-                this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-            }.toDto()
+                this.address = addressRepository.findAddressForCustomerId(this.id).first()
+            }.toDtoYeager()
         } else {
             null
         }
@@ -128,9 +128,16 @@ class CustomerService (
                     watched = customerEntity.watched,
                     favorites = customerEntity.favorites + movieEntity
                 )
-            ).toDto()
+            ).apply {
+                this.address = addressRepository.findAddressForCustomerId(this.id).first()
+            }.toDtoYeager()
         } else {
             null
         }
     }
+
+
+    suspend fun test() =
+        movieService.findWatchedMoviesForCustomerId(1)
+
 }

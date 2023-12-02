@@ -3,9 +3,11 @@ package com.nikik0.libproj.controllers
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.CustomerEntity
+import com.nikik0.libproj.entities.MovieEntity
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.services.CustomerService
+import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -44,17 +46,17 @@ class CustomerController (
     //todo add complicated saving for watched and favs in db
 
 
-    @PostMapping("/{id}/favourites/add")
-    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto): ResponseEntity<CustomerDto> {
-        val tt = customerService.addToFavourites(id, movieDto)
-        println(tt)
-        return tt?.let { ResponseEntity.ok(it) }
-            ?: ResponseEntity(HttpStatus.BAD_REQUEST)
-    }
-
 //    @PostMapping("/{id}/favourites/add")
-//    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
-//        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+//    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto): ResponseEntity<CustomerDto> {
+//        val tt = customerService.addToFavourites(id, movieDto)
+//        println(tt)
+//        return tt?.let { ResponseEntity.ok(it) }
+//            ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+//    }
+
+    @PostMapping("/{id}/favourites/add")
+    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
+        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
 
     @PostMapping("/ugh")
@@ -79,23 +81,8 @@ class CustomerController (
             )
         }
     @GetMapping("/testget")
-    suspend fun testGet(): CustomerDto {
+    suspend fun testGet(): Flow<MovieEntity> {
 //            return customerService.saveNewCustomerTest(customerDto)
-        return CustomerDto(
-            2,
-            "Dad",
-            "Dew",
-            "dasd",
-            "eew",
-            "ee",
-            "rr",
-            "qwe",
-            1,
-            "asd",
-            23,
-            "asd",
-            emptyList(),
-            emptyList()
-        )
+        return customerService.test()
     }
 }
