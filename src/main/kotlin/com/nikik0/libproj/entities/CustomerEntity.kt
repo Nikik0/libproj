@@ -20,7 +20,28 @@ fun CustomerEntity.toDto(): CustomerDto {
         building = this.address?.building,
         buildingLiteral = this.address?.buildingLiteral,
         apartmentNumber = this.address?.apartmentNumber,
-        additionalInfo = this.address?.additionalInfo
+        additionalInfo = this.address?.additionalInfo,
+        watched = emptyList(),
+        favourites = emptyList()
+    )
+}
+
+fun CustomerEntity.toDtoYeager(): CustomerDto {
+    return CustomerDto(
+        id = this.id,
+        name = this.name,
+        surname = this.surname,
+        country = this.address?.country,
+        state = this.address?.state,
+        city = this.address?.city,
+        district = this.address?.district,
+        street = this.address?.street,
+        building = this.address?.building,
+        buildingLiteral = this.address?.buildingLiteral,
+        apartmentNumber = this.address?.apartmentNumber,
+        additionalInfo = this.address?.additionalInfo,
+        watched = watched.map { it.mapToDto() },
+        favourites = favorites.map { it.mapToDto() }
     )
 }
 
@@ -33,9 +54,9 @@ data class CustomerEntity(
     @Transient
     var address: AddressEntity?,
     @Transient
-    val watched: List<MovieEntity>,
+    var watched: List<MovieEntity>,
     @Transient
-    val favorites: List<MovieEntity>
+    var favorites: List<MovieEntity>
 ) {
     @PersistenceCreator
     constructor(

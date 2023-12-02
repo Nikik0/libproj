@@ -50,5 +50,7 @@ data class CustomerDto(
     val building: Int?,
     val buildingLiteral: String?,
     val apartmentNumber: Int?,
-    val additionalInfo: String?
+    val additionalInfo: String?,
+    val watched: List<MovieDto>?,
+    val favourites: List<MovieDto>?
 )

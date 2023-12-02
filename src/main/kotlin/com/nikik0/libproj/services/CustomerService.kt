@@ -15,13 +15,16 @@ import org.springframework.transaction.annotation.Transactional
 class CustomerService (
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
-    private val movieRepository: MovieRepository,
-    private val manyToManyRepository: ManyToManyRepository
+    //private val movieRepository: MovieRepository,
+    private val manyToManyRepository: ManyToManyRepository,
+    private val movieService: MovieService
         ){
 
 
     suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.apply {
         this.address = addressRepository.findAddressForCustomerId(this.id).toList().first()
+        this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
+        this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
     }?.toDto()
 
     suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
@@ -84,29 +87,38 @@ class CustomerService (
     suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
+    @Transactional
     suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto? {
-        val film = movieRepository.findById(movieDto.id)
+        val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
-        return if (customerEntity != null && film != null) {
+        println("from service film found $movieEntity for customer $customerEntity")
+        return if (customerEntity != null && movieEntity != null) {
+            manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
             customerRepository.save(
                 CustomerEntity(
                     id = customerEntity.id,
                     name = customerEntity.name,
                     surname = customerEntity.surname,
                     address = customerEntity.address,
-                    watched = customerEntity.watched + film,
+                    watched = customerEntity.watched + movieEntity,
                     favorites = customerEntity.favorites
                 )
-            ).toDto()
+            ).apply {
+                this.address = addressRepository.findAddressForCustomerId(this.id).toList().first()
+                this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
+                this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
+            }.toDto()
         } else {
             null
         }
     }
 
+    @Transactional
     suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto? {
-        val film = movieRepository.findById(movieDto.id)
+        val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
-        return if (customerEntity != null && film != null) {
+        return if (customerEntity != null && movieEntity != null) {
+            manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
             customerRepository.save(
                 CustomerEntity(
                     id = customerEntity.id,
@@ -114,7 +126,7 @@ class CustomerService (
                     surname = customerEntity.surname,
                     address = customerEntity.address,
                     watched = customerEntity.watched,
-                    favorites = customerEntity.favorites + film
+                    favorites = customerEntity.favorites + movieEntity
                 )
             ).toDto()
         } else {
