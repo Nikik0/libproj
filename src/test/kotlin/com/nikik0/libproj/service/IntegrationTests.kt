@@ -97,7 +97,9 @@ class IntegrationTests(
                     "building": 1,
                     "buildingLiteral": "Second literal",
                     "apartmentNumber": 23,
-                    "additionalInfo": "Second additional info"
+                    "additionalInfo": "Second additional info",
+                    "watched": [],
+                    "favourites":[]
                 }
     """.trimIndent()
 
@@ -299,7 +301,8 @@ class IntegrationTests(
     fun `save customer returns correct customer dto`(){
         val customerDto = webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedFirstDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
-        assertThat(customerDto).isEqualTo(customerSavedDummy)
+//        println(customerDto)
+            assertThat(customerDto).isEqualTo(customerSavedDummy)
         webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedSecondDummy).exchange().returnResult<CustomerDto>()
     }
@@ -323,10 +326,16 @@ class IntegrationTests(
     @Test
     @Order(9)
     fun `add to watched returns dto with correct watched list`(){
+        val cust = webClient.get().uri("/api/v1/customer/get/1").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        val movie = webClient.get().uri("/api/v1/movie/get/${movieSavedDummy?.id}").exchange()
+            .returnResult<MovieDto>().responseBody.blockLast()
+        println("for cust $cust adding movie $movie")
         val customer = webClient.post().uri("/api/v1/customer/1/watched/add")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieSavedDummy!!).exchange()
-            .returnResult<CustomerDto>().responseBody.blockLast()
+            .returnResult<Any>().responseBody.blockLast()
+        println("watched added for customer $customer")
     }
 
 
