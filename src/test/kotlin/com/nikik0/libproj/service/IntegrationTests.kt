@@ -326,17 +326,35 @@ class IntegrationTests(
     @Test
     @Order(9)
     fun `add to watched returns dto with correct watched list`(){
-        val cust = webClient.get().uri("/api/v1/customer/get/1").exchange()
+        val customer = webClient.get().uri("/api/v1/customer/get/1").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
         val movie = webClient.get().uri("/api/v1/movie/get/${movieSavedDummy?.id}").exchange()
             .returnResult<MovieDto>().responseBody.blockLast()
-        println("for cust $cust adding movie $movie")
-        val customer = webClient.post().uri("/api/v1/customer/1/watched/add")
+        val customerUpdated = webClient.post().uri("/api/v1/customer/${customer!!.id}/watched/add")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieSavedDummy!!).exchange()
-            .returnResult<Any>().responseBody.blockLast()
-        println("watched added for customer $customer")
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerUpdated!!.watched).isNotNull.isNotEmpty.hasSize(1)
+        assertThat(customerUpdated.watched!![0].id).isEqualTo(movie!!.id)
     }
+
+
+    @Test
+    @Order(10)
+    fun `add to watched returns dto with correct favourites list`(){
+        val customer = webClient.get().uri("/api/v1/customer/get/1").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        val movie = webClient.get().uri("/api/v1/movie/get/${movieSavedDummy?.id}").exchange()
+            .returnResult<MovieDto>().responseBody.blockLast()
+        val customerUpdated = webClient.post().uri("/api/v1/customer/${customer!!.id}/favourites/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerUpdated!!.favourites).isNotNull.isNotEmpty.hasSize(1)
+        assertThat(customerUpdated.favourites!![0].id).isEqualTo(movie!!.id)
+    }
+
+
 
 
 }
