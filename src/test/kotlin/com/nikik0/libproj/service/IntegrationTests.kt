@@ -46,7 +46,7 @@ class IntegrationTests(
     companion object {
         private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
             .apply {
-                this.withDatabaseName("movies-db").withUsername("dev").withPassword("dev123").withInitScript("init.sql")
+                this.withDatabaseName("movies-db").withUsername("test").withPassword("test123").withInitScript("init.sql")
             }
 
         @JvmStatic
@@ -245,7 +245,6 @@ class IntegrationTests(
         assertThat(entity).isEqualTo(movieSavedDummy)
         webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
-
     }
 
     @Test
@@ -255,12 +254,12 @@ class IntegrationTests(
             .responseBody.blockLast()
         assertThat(retrievedEntity).isEqualTo(movieSavedDummy)
     }
+
     @Test
     @Order(3)
     fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
             .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
-            //.consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
@@ -274,7 +273,6 @@ class IntegrationTests(
     fun `get all lazy should return list of movieDto with null actors and tags`(){
         val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(2)
-            //.consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         val dto = retrievedListOfMovies.responseBody?.get(0)
         val actors = dto?.actors
@@ -288,11 +286,9 @@ class IntegrationTests(
     fun `get by tag returns correct amount of dtos`(){
         webClient.get().uri("/api/v1/movie/find/tag/Horror").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(1)
-//            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
         webClient.get().uri("/api/v1/movie/find/tag/Action").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(2)
-//            .consumeWith<WebTestClient.ListBodySpec<MovieDto>>(System.out::println)
             .returnResult()
     }
 
@@ -301,7 +297,6 @@ class IntegrationTests(
     fun `save customer returns correct customer dto`(){
         val customerDto = webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedFirstDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
-//        println(customerDto)
             assertThat(customerDto).isEqualTo(customerSavedDummy)
         webClient.post().uri("/api/v1/customer/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedSecondDummy).exchange().returnResult<CustomerDto>()
@@ -353,8 +348,5 @@ class IntegrationTests(
         assertThat(customerUpdated!!.favourites).isNotNull.isNotEmpty.hasSize(1)
         assertThat(customerUpdated.favourites!![0].id).isEqualTo(movie!!.id)
     }
-
-
-
 
 }
