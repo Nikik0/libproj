@@ -4,6 +4,7 @@ import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -17,6 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import org.assertj.core.api.Assertions.*
 import org.json.JSONObject
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Order
@@ -27,6 +29,9 @@ import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.r2dbc.core.DatabaseClient
+import org.springframework.r2dbc.core.await
+import org.springframework.test.jdbc.JdbcTestUtils
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.reactive.function.BodyInserter
@@ -40,6 +45,10 @@ import org.springframework.web.reactive.function.BodyInserters
 class IntegrationTests(
     @Autowired
     val webClient: WebTestClient
+    ,
+    @Autowired
+    val client: DatabaseClient
+//    ,
 //    @Autowired
 //    val jdbc: JdbcTemplate
 ) {
@@ -172,6 +181,63 @@ class IntegrationTests(
                 "movieUrl": "someurl.com/url2"
             }
         """.trimIndent()
+
+
+    private val tables = listOf(
+        "actor", "address",
+        "customer", "customer_address", "customer_favourite_movies",
+        "customer_watched_movies", "movie", "movie_actor",
+        "studio", "studio_movie", "tag", "tag_movie"
+    )
+
+    private val sequences = listOf(
+        "actor_id_seq", "actor_id_seq", "customer_id_seq",
+        "movie_id_seq", "studio_id_seq", "tag_id_seq"
+    )
+
+    @AfterEach
+    fun cleanDb(){
+        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
+            .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
+            .returnResult()
+
+        println("before cleanup total movies are $retrievedListOfMovies")
+
+//        var sqlStatement= "truncate ".toString()
+//        for (table in tables)
+//            sqlStatement += "$table, "
+//        sqlStatement = sqlStatement.dropLast(2)
+//        sqlStatement+= " restart identity cascade"
+
+        runBlocking {
+//            client.sql(sqlStatement).await()
+            for (table in tables)
+                client.sql("truncate $table restart identity cascade ").await()
+
+//            for (sequence in sequences)
+//                client.sql("alter sequence $sequence restart").await()
+
+        }
+
+        val retrievedListOfMovies2 = webClient.get().uri("/api/v1/movie/get/all/yeager")
+            .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
+            .returnResult()
+
+        println("after cleanup total movies are $retrievedListOfMovies2")
+
+//        JdbcTestUtils.deleteFromTables(
+//            client, "actor", "address",
+//            "customer", "customer_address", "customer_favourites_movies",
+//            "customer_watched_movies", "movie", "movie_actor",
+//            "studio", "studio_movie", "tag", "tag_movie"
+//        )
+//        jdbc.execute("alter sequence actor_id_seq restart")
+//        jdbc.execute("alter sequence address_id_seq restart")
+//        jdbc.execute("alter sequence customer_id_seq restart")
+//        jdbc.execute("alter sequence movie_id_seq restart")
+//        jdbc.execute("alter sequence studio_id_seq restart")
+//        jdbc.execute("alter sequence tag_id_seq restart")
+    }
 
     @BeforeEach
     fun setupTestCustomer(){
