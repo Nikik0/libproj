@@ -219,7 +219,6 @@ class IntegrationTests(
             println(" after truncate")
             for (seq in sequences)
                 client.sql("select * from $seq").map { row -> row.get("last_value") }.all().subscribe { th -> println(th) }
-
         }
 
         val retrievedListOfMovies2 = webClient.get().uri("/api/v1/movie/get/all/yeager")
@@ -390,39 +389,51 @@ class IntegrationTests(
         assertThat(retrievedEntity).isEqualTo(movieSavedFirstDummy)
     }
 
-//    @Test
-//    fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
-//        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
-//            .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
-//            .returnResult()
-//        val dto = retrievedListOfMovies.responseBody?.get(0)
-//        val actors = dto?.actors
-//        val tags = dto?.tags
-//        assertThat(actors).isNotNull.isNotEmpty
-//        assertThat(tags).isNotNull.isNotEmpty
-//    }
-//
-//    @Test
-//    fun `get all lazy should return list of movieDto with null actors and tags`(){
-//        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
-//            .expectBodyList(MovieDto::class.java).hasSize(2)
-//            .returnResult()
-//        val dto = retrievedListOfMovies.responseBody?.get(0)
-//        val actors = dto?.actors
-//        val tags = dto?.tags
-//        assertThat(actors).isEmpty()
-//        assertThat(tags).isEmpty()
-//    }
-//
-//    @Test
-//    fun `get by tag returns correct amount of dtos`(){
-//        webClient.get().uri("/api/v1/movie/find/tag/Horror").exchange()
-//            .expectBodyList(MovieDto::class.java).hasSize(1)
-//            .returnResult()
-//        webClient.get().uri("/api/v1/movie/find/tag/Action").exchange()
-//            .expectBodyList(MovieDto::class.java).hasSize(2)
-//            .returnResult()
-//    }
+    @Test
+    fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
+        webClient.get().uri("/api/v1/movie/get/all/yeager")
+            .exchange().expectBodyList(MovieDto::class.java).hasSize(1)
+            .returnResult()
+        webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/yeager")
+            .exchange().expectBodyList(MovieDto::class.java).hasSize(2)
+            .returnResult()
+        val dto = retrievedListOfMovies.responseBody?.get(0)
+        val actors = dto?.actors
+        val tags = dto?.tags
+        assertThat(actors).isNotNull.isNotEmpty
+        assertThat(tags).isNotNull.isNotEmpty
+    }
+
+    @Test
+    fun `get all lazy should return list of movieDto with null actors and tags`(){
+        webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(1)
+            .returnResult()
+        webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        val retrievedListOfMovies = webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(2)
+            .returnResult()
+        val dto = retrievedListOfMovies.responseBody?.get(0)
+        val actors = dto?.actors
+        val tags = dto?.tags
+        assertThat(actors).isEmpty()
+        assertThat(tags).isEmpty()
+    }
+
+    @Test
+    fun `get by tag returns correct amount of dtos`(){
+        webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        webClient.get().uri("/api/v1/movie/find/tag/Horror").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(1)
+            .returnResult()
+        webClient.get().uri("/api/v1/movie/find/tag/Action").exchange()
+            .expectBodyList(MovieDto::class.java).hasSize(2)
+            .returnResult()
+    }
 
 //    @Test
 //    @Order(6)
