@@ -2,6 +2,7 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.services.MovieService
+import com.nikik0.libproj.services.MovieServiceImpl
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping

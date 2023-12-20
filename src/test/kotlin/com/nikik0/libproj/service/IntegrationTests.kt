@@ -3,40 +3,25 @@ package com.nikik0.libproj.service
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.*
-import io.r2dbc.spi.Row
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.testcontainers.containers.PostgreSQLContainer
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import org.assertj.core.api.Assertions.*
-import org.json.JSONObject
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.params.ParameterizedTest
-import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
-import org.springframework.boot.test.web.client.getForEntity
-import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
-import org.springframework.test.jdbc.JdbcTestUtils
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
-import org.springframework.web.reactive.function.BodyInserter
-import org.springframework.web.reactive.function.BodyInserters
 
 
 @SpringBootTest(
@@ -49,9 +34,6 @@ class IntegrationTests(
     ,
     @Autowired
     val client: DatabaseClient
-//    ,
-//    @Autowired
-//    val jdbc: JdbcTemplate
 ) {
     companion object {
         private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
@@ -66,13 +48,13 @@ class IntegrationTests(
             registry.add("spring.r2dbc.username", postgres::getUsername)
             registry.add("spring.r2dbc.password", postgres::getPassword)
         }
-        fun r2dbcUrl(): String {
+        private fun r2dbcUrl(): String {
             return "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/${postgres.databaseName}"
         }
 
         @JvmStatic
         @BeforeAll
-        internal fun setUp(): Unit {
+        internal fun setUp(){
             postgres.start()
         }
     }
@@ -204,7 +186,7 @@ class IntegrationTests(
         }
     }
 
-    fun setupTestCustomer(){
+    private fun setupTestCustomer(){
         val addressSecond = AddressEntity(
             id = 2,
             country = "Second country",
@@ -247,7 +229,7 @@ class IntegrationTests(
         ).toDto()
     }
 
-    fun setupTestMovie() {
+    private fun setupTestMovie() {
         val actorOne = Actor(
             id = 1L,
             name = "First Actor name",
@@ -318,9 +300,7 @@ class IntegrationTests(
         )
     }
 
-    fun insertTestData(){
-        println("BEFORE EACH STARTED")
-
+    private fun insertTestData(){
         //first movie insert
         webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedFirstDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
@@ -329,7 +309,6 @@ class IntegrationTests(
         webClient.post().uri("/api/v1/customer/save")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedFirstDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
-        println("BEFORE EACH FINISHED")
     }
 
     @BeforeEach
@@ -341,14 +320,9 @@ class IntegrationTests(
 
     @Test
     fun `save should return correct new movieDto`() {
-        println("SAVE STARTED")
-
-        //todo actors and tags get saved multiple times even when identical
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
         assertThat(entity).isEqualTo(movieSavedSecondDummy)
-        assertThat(1).isEqualTo(1)
-        println("SAVE FINISHED")
     }
 
     @Test
