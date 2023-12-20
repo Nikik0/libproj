@@ -113,7 +113,9 @@ class IntegrationTests(
                 }
     """.trimIndent()
 
-    private var movieSavedDummy: MovieDto? = null
+    private var movieSavedFirstDummy: MovieDto? = null
+
+    private var movieSavedSecondDummy: MovieDto? = null
 
     private val movieUnsavedFirstDummy: String = """
             {
@@ -206,23 +208,13 @@ class IntegrationTests(
 
         println("before cleanup total movies are $retrievedListOfMovies")
 
-//        var sqlStatement= "truncate ".toString()
-//        for (table in tables)
-//            sqlStatement += "$table, "
-//        sqlStatement = sqlStatement.dropLast(2)
-//        sqlStatement+= " restart identity cascade"
-
         runBlocking {
-//            client.sql(sqlStatement).await()
             println("before truncate")
             for (seq in sequences)
                 client.sql("select * from $seq").map { row -> row.get("last_value") }.all().subscribe { th -> println(th) }
 
             for (table in tables)
                 client.sql("truncate $table restart identity cascade ").await()
-//
-//            for (sequence in sequences)
-//                client.sql("alter sequence $sequence restart").await()
 
             println(" after truncate")
             for (seq in sequences)
@@ -238,21 +230,8 @@ class IntegrationTests(
 
 
         println("AFTER EACH FINISHED")
-//        JdbcTestUtils.deleteFromTables(
-//            client, "actor", "address",
-//            "customer", "customer_address", "customer_favourites_movies",
-//            "customer_watched_movies", "movie", "movie_actor",
-//            "studio", "studio_movie", "tag", "tag_movie"
-//        )
-//        jdbc.execute("alter sequence actor_id_seq restart")
-//        jdbc.execute("alter sequence address_id_seq restart")
-//        jdbc.execute("alter sequence customer_id_seq restart")
-//        jdbc.execute("alter sequence movie_id_seq restart")
-//        jdbc.execute("alter sequence studio_id_seq restart")
-//        jdbc.execute("alter sequence tag_id_seq restart")
     }
 
-    @BeforeEach
     fun setupTestCustomer(){
         val address = AddressEntity(
             id = 1,
@@ -276,73 +255,140 @@ class IntegrationTests(
         ).toDto()
     }
 
-    @BeforeEach
     fun setupTestMovie() {
+//        {
+//            "name": "Second Test Movie",
+//            "producer": "Second Test Producer",
+//            "actors": [
+//            {
+//                "name": "Third Actor name",
+//                "surname": "Third Actor surname",
+//                "age": 20
+//            },
+//            {
+//                "name": "Forth Actor name",
+//                "surname": "Forth Actor surname",
+//                "age": 30
+//            }
+//            ],
+//            "tags": [
+//            {
+//                "name": "Mystic"
+//            },
+//            {
+//                "name": "Action"
+//            }
+//            ],
+//            "studio": {
+//            "name": "Second Test Studio",
+//            "employees": 2000,
+//            "owner": "Second Studio Owner"
+//        },
+//            "budget": 2000000,
+//            "movieUrl": "someurl.com/url2"
+//        }
         val actorOne = Actor(
-            id = 3L,
+            id = 1L,
             name = "First Actor name",
             surname = "First Actor surname",
             age = 20
         )
         val actorTwo = Actor(
-            id = 4L,
+            id = 2L,
             name = "Second Actor name",
             surname = "Second Actor surname",
             age = 30
         )
-        val tagOne = MovieTag(
-            id = 1L,
-            name = "Horror"
+        val actorThree = Actor(
+            id = 3L,
+            name = "Third Actor name",
+            surname = "Third Actor surname",
+            age = 20
+        )
+        val actorFour = Actor(
+            id = 4L,
+            name = "Forth Actor name",
+            surname = "Forth Actor surname",
+            age = 30
+        )
+        val tagThree = MovieTag(
+            id = 3L,
+            name = "Mystic"
         )
         val tagTwo = MovieTag(
             id = 2L,
             name = "Action"
         )
-        val studio = MovieStudio(
+        val tagOne = MovieTag(
+            id = 1L,
+            name = "Horror"
+        )
+        val studioOne = MovieStudio(
             id = 1L,
             name = "First Test Studio",
             employees = 2000L,
             owner = "First Studio Owner"
         )
-        movieSavedDummy = MovieDto(
+        val studioTwo = MovieStudio(
             id = 2L,
+            name = "Second Test Studio",
+            employees = 2000L,
+            owner = "Second Studio Owner"
+        )
+        movieSavedSecondDummy = MovieDto(
+            id = 2L,
+            name = "Second Test Movie",
+            producer = "Second Test Producer",
+            actors = listOf(actorThree, actorFour),
+            tags = listOf(tagThree, tagTwo),
+            studio = studioTwo,
+            budget = 2000000L,
+            movieUrl = "someurl.com/url2"
+        )
+        movieSavedFirstDummy = MovieDto(
+            id = 1L,
             name = "First Test Movie",
             producer = "First Test Producer",
             actors = listOf(actorOne, actorTwo),
             tags = listOf(tagOne, tagTwo),
-            studio = studio,
+            studio = studioOne,
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
     }
 
-    @BeforeEach
     fun insertTestData(){
         println("BEFORE EACH STARTED")
         webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+            .bodyValue(movieUnsavedFirstDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
         println("BEFORE EACH FINISHED")
+    }
+
+    @BeforeEach
+    fun setupBeforeTests(){
+        setupTestCustomer()
+        setupTestMovie()
+        insertTestData()
     }
 
     @Test
     fun `save should return correct new movieDto`() {
         println("SAVE STARTED")
 
-
-            //todo actors and tags get saved multiple times even when identical
+        //todo actors and tags get saved multiple times even when identical
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
-            .bodyValue(movieUnsavedFirstDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
-        assertThat(entity).isEqualTo(movieSavedDummy)
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        assertThat(entity).isEqualTo(movieSavedSecondDummy)
         assertThat(1).isEqualTo(1)
         println("SAVE FINISHED")
     }
 
-//    @Test
-//    fun `get single should return correct movieDto`() {
-//        val retrievedEntity = webClient.get().uri("/api/v1/movie/get/1").exchange().returnResult<MovieDto>()
-//            .responseBody.blockLast()
-//        assertThat(retrievedEntity).isEqualTo(movieSavedDummy)
-//    }
+    @Test
+    fun `get single should return correct movieDto`() {
+        val retrievedEntity = webClient.get().uri("/api/v1/movie/get/1").exchange().returnResult<MovieDto>()
+            .responseBody.blockLast()
+        assertThat(retrievedEntity).isEqualTo(movieSavedFirstDummy)
+    }
 
 //    @Test
 //    fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
