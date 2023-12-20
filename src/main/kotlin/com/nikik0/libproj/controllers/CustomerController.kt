@@ -2,11 +2,9 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
-import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.entities.MovieEntity
-import com.nikik0.libproj.repositories.AddressRepository
-import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.services.CustomerService
+import com.nikik0.libproj.services.CustomerServiceImpl
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -56,7 +54,8 @@ class CustomerController (
 
     @PostMapping("/{id}/favourites/add")
     suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
-        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+        customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) }
+            ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
 
     @PostMapping("/ugh")
