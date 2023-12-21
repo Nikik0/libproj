@@ -2,10 +2,7 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToEntity
-import com.nikik0.libproj.entities.Actor
-import com.nikik0.libproj.entities.MovieEntity
-import com.nikik0.libproj.entities.MovieStudio
-import com.nikik0.libproj.entities.MovieTag
+import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.repositories.ActorRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
 import com.nikik0.libproj.repositories.MovieRepository
@@ -20,6 +17,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.*
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -45,20 +46,31 @@ class MovieServiceTest {
     @InjectMockKs
     lateinit var movieService: MovieServiceImpl
 
-    private lateinit var movieDto: MovieDto
+    private lateinit var movieDto1: MovieDto
 
-    private lateinit var movieEntity: MovieEntity
+    private lateinit var movieEntity1: MovieEntity
+
+    private lateinit var movieDto2: MovieDto
+
+    private lateinit var movieEntity2: MovieEntity
 
     private lateinit var actor1 : Actor
 
     private lateinit var actor2: Actor
 
+    private lateinit var actor3 : Actor
+
+    private lateinit var actor4: Actor
+
     private lateinit var tag1: MovieTag
 
     private lateinit var tag2: MovieTag
 
-    private lateinit var studio: MovieStudio
+    private lateinit var tag3: MovieTag
 
+    private lateinit var studio1: MovieStudio
+
+    private lateinit var studio2: MovieStudio
 
 //    idk if this is need or not
 //    @Before
@@ -66,8 +78,8 @@ class MovieServiceTest {
 //        MockKAnnotations.init(this, relaxUnitFun = true)
 //    }
 
-    @BeforeEach
-    private fun setup() {
+
+    private fun setupEntities() {
         actor1 = Actor(
             id = 1L,
             name = "First Actor name",
@@ -80,32 +92,64 @@ class MovieServiceTest {
             surname = "Second Actor surname",
             age = 30
         )
-        tag1 = MovieTag(
-            id = 1L,
-            name = "Horror"
+        actor3 = Actor(
+            id = 3L,
+            name = "Third Actor name",
+            surname = "Third Actor surname",
+            age = 20
+        )
+        actor4 = Actor(
+            id = 4L,
+            name = "Forth Actor name",
+            surname = "Forth Actor surname",
+            age = 30
         )
         tag2 = MovieTag(
             id = 2L,
             name = "Action"
         )
-        studio = MovieStudio(
+        tag1 = MovieTag(
+            id = 1L,
+            name = "Horror"
+        )
+        tag3 = MovieTag(
+            id = 3L,
+            name = "Mystic"
+        )
+        studio1 = MovieStudio(
             id = 1L,
             name = "First Test Studio",
             employees = 2000L,
             owner = "First Studio Owner"
         )
-        movieDto = MovieDto(
+        studio2 = MovieStudio(
+            id = 2L,
+            name = "Second Test Studio",
+            employees = 2000L,
+            owner = "Second Studio Owner"
+        )
+        movieDto2 = MovieDto(
+            id = 2L,
+            name = "Second Test Movie",
+            producer = "Second Test Producer",
+            actors = listOf(actor3, actor4),
+            tags = listOf(tag3, tag2),
+            studio = studio2,
+            budget = 2000000L,
+            movieUrl = "someurl.com/url2"
+        )
+        movieDto1 = MovieDto(
             id = 1L,
             name = "First Test Movie",
             producer = "First Test Producer",
             actors = listOf(actor1, actor2),
             tags = listOf(tag1, tag2),
-            studio = studio,
+            studio = studio1,
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
-
-        movieEntity = movieDto.mapToEntity()
+        movieEntity1 = movieDto1.mapToEntity()
+        movieEntity2 = movieDto2.mapToEntity()
     }
 
 //    @OptIn(DelicateCoroutinesApi::class)
@@ -131,27 +175,109 @@ class MovieServiceTest {
 //        }
 //    }
 
+    private fun setUpMocks(){
+
+        //save
+        coEvery { tagService.saveTagIfNotPresent(tag1) } returns tag1
+        coEvery { tagService.saveTagIfNotPresent(tag2) } returns tag2
+        coEvery { actorService.saveActorIfNotPresent(actor1) } returns actor1
+        coEvery { actorService.saveActorIfNotPresent(actor2) } returns actor2
+        coEvery { studioService.saveStudioIfNotPresent(studio1) } returns studio1
+        coEvery { movieRepository.save(movieEntity1) } returns movieEntity1
+        coEvery { manyToManyRepository.movieActorInsert(1, listOf(1, 2)) } returns Unit
+        coEvery { manyToManyRepository.tagMovieInsert(listOf(1, 2), 1) } returns Unit
+        coEvery { manyToManyRepository.studioMovieInsert(1, 1) } returns Unit
+
+        //getOne
+        coEvery { movieRepository.findById(1) } returns movieEntity1
+        coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
+        coEvery { tagService.findTagsForMovie(1) } returns listOf(tag1, tag2)
+        coEvery { studioService.findStudioForMovie(1) } returns studio1
+
+        //getYeager
+        coEvery { movieRepository.findById(2) } returns movieEntity2
+        coEvery { actorService.findActorsForMovie(2) } returns listOf(actor3, actor4)
+        coEvery { tagService.findTagsForMovie(2) } returns listOf(tag3, tag2)
+        coEvery { movieRepository.findById(1) } returns movieEntity1
+        coEvery { movieRepository.findById(2) } returns movieEntity2
+        coEvery { movieRepository.findAll() } returns listOf(movieEntity1, movieEntity2).asFlow()
+        coEvery { studioService.findStudioForMovie(2) } returns studio2
+
+    }
+
+    @BeforeEach
+    fun setup(){
+        setupEntities()
+        setUpMocks()
+    }
 
     //todo this is a disaster and should be rewritten ( but works smh)
     @Test
     @DisplayName("saveOne returns single corresponding dto for movieDto after saving")
     fun saveOneShouldReturnDtoWhenOK() = runTest {
-        coEvery { tagService.saveTagIfNotPresent(tag1) } returns tag1
-        coEvery { tagService.saveTagIfNotPresent(tag2) } returns tag2
-        coEvery { actorService.saveActorIfNotPresent(actor1) } returns actor1
-        coEvery { actorService.saveActorIfNotPresent(actor2) } returns actor2
-        coEvery { studioService.saveStudioIfNotPresent(studio) } returns studio
-        coEvery { movieRepository.save(movieEntity) } returns movieEntity
-        coEvery { manyToManyRepository.movieActorInsert(1, listOf(1, 2)) } returns Unit
-        coEvery { manyToManyRepository.tagMovieInsert(listOf(1, 2), 1) } returns Unit
-        coEvery { manyToManyRepository.studioMovieInsert(1, 1) } returns Unit
-
-        assertEquals(movieService.saveOne(movieDto), movieDto)
+        assertEquals(movieService.saveOne(movieDto1), movieDto1)
     }
 
     @Test
     fun getOneShouldReturnDtoWhenOk() = runTest {
+        coEvery { movieRepository.findById(1) } returns movieEntity1
+        coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
+        coEvery { tagService.findTagsForMovie(1) } returns listOf(tag1, tag2)
+        coEvery { studioService.findStudioForMovie(1) } returns studio1
 
+        assertEquals(movieService.getOne(1), movieDto1)
+    }
+
+    @Test
+    fun findByIdReturnsEntityWhenOk() = runTest {
+        coEvery { movieRepository.findById(1) } returns movieEntity1
+        assertEquals(movieService.findById(1), movieEntity1)
+    }
+
+    @Test
+    fun getAllYeagerReturnsMultipleMovieDto() = runTest{
+
+        assertEquals(movieService.getAllYeager().toList(), listOf(movieDto1, movieDto2))
+    }
+
+    @Test
+    fun getAllLazyReturnsMultipleMovieDtoWithoutActorsEtc() = runTest {
+        //todo not working somehow?
+        val movieDtoLazy1 = MovieDto(
+            id = movieDto1.id,
+            name = movieDto1.name,
+            producer = movieDto1.producer,
+            actors = emptyList(),
+            tags = emptyList(),
+            studio = null,
+            budget = movieDto1.budget,
+            movieUrl = movieDto1.movieUrl
+        )
+        val movieDtoLazy2 = MovieDto(
+            id = movieDto2.id,
+            name = movieDto2.name,
+            producer = movieDto2.producer,
+            actors = emptyList(),
+            tags = emptyList(),
+            studio = null,
+            budget = movieDto2.budget,
+            movieUrl = movieDto2.movieUrl
+        )
+        println(movieService.getAllLazy().toList())
+        assertEquals(movieService.getAllLazy().toList(), listOf(movieDtoLazy1, movieDtoLazy2))
+    }
+
+
+    @Test
+    fun findByTagReturnsCorrectDto() = runTest {
+        coEvery { tagService.findByName("Horror") } returns tag1
+        coEvery { tagService.findByName("Action") } returns tag2
+        coEvery { movieRepository.findMoviesByTagId(1) } returns flowOf(movieEntity1)
+        coEvery { movieRepository.findMoviesByTagId(2) } returns flowOf(movieEntity1, movieEntity2)
+
+        println(movieService.findByTag("Horror")?.toList()!!.map { it.id })
+        println(listOf(1))
+        assertEquals(movieService.findByTag("Horror")!!.map { it.id }.toList() , listOf(1).asFlow().toList() )
     }
 
     @Test
