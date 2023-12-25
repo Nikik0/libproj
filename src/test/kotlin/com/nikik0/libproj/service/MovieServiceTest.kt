@@ -150,8 +150,16 @@ class MovieServiceTest {
             budget = 2000000L,
             movieUrl = "someurl.com/url"
         )
-        movieEntity1 = movieDto1.mapToEntity()
-        movieEntity2 = movieDto2.mapToEntity()
+        movieEntity1 = movieDto1.mapToEntity().apply {
+            actors = emptyList()
+            tags = emptyList()
+            studio = null
+        }
+        movieEntity2 = movieDto2.mapToEntity().apply {
+            actors = emptyList()
+            tags = emptyList()
+            studio = null
+        }
     }
 
 //    @OptIn(DelicateCoroutinesApi::class)
@@ -177,73 +185,86 @@ class MovieServiceTest {
 //        }
 //    }
 
-    private fun setUpMocks(){
-
-        //save
-        coEvery { tagService.saveTagIfNotPresent(tag1) } returns tag1
-        coEvery { tagService.saveTagIfNotPresent(tag2) } returns tag2
-        coEvery { actorService.saveActorIfNotPresent(actor1) } returns actor1
-        coEvery { actorService.saveActorIfNotPresent(actor2) } returns actor2
-        coEvery { studioService.saveStudioIfNotPresent(studio1) } returns studio1
-        coEvery { movieRepository.save(movieEntity1) } returns movieEntity1
-        coEvery { manyToManyRepository.movieActorInsert(1, listOf(1, 2)) } returns Unit
-        coEvery { manyToManyRepository.tagMovieInsert(listOf(1, 2), 1) } returns Unit
-        coEvery { manyToManyRepository.studioMovieInsert(1, 1) } returns Unit
-
-        //getOne
-        coEvery { movieRepository.findById(1) } returns movieEntity1
-        coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
-        coEvery { tagService.findTagsForMovie(1) } returns listOf(tag1, tag2)
-        coEvery { studioService.findStudioForMovie(1) } returns studio1
-
-        //getYeager
-        coEvery { movieRepository.findById(2) } returns movieEntity2
-        coEvery { actorService.findActorsForMovie(2) } returns listOf(actor3, actor4)
-        coEvery { tagService.findTagsForMovie(2) } returns listOf(tag3, tag2)
-        coEvery { movieRepository.findById(1) } returns movieEntity1
-        coEvery { movieRepository.findById(2) } returns movieEntity2
-        coEvery { movieRepository.findAll() } returns listOf(movieEntity1, movieEntity2).asFlow()
-        coEvery { studioService.findStudioForMovie(2) } returns studio2
-
-    }
 
     @BeforeEach
     fun setup(){
         setupEntities()
-        setUpMocks()
     }
 
     @Test
     @DisplayName("saveOne returns single corresponding dto for movieDto after saving")
     fun saveOneShouldReturnDtoWhenOK() = runTest {
-        assertEquals(movieService.saveOne(movieDto1), movieDto1)
+        // given
+        coEvery { tagService.saveTagIfNotPresent(tag1) } returns tag1
+        coEvery { tagService.saveTagIfNotPresent(tag2) } returns tag2
+        coEvery { actorService.saveActorIfNotPresent(actor1) } returns actor1
+        coEvery { actorService.saveActorIfNotPresent(actor2) } returns actor2
+        coEvery { studioService.saveStudioIfNotPresent(studio1) } returns studio1
+        coEvery { movieRepository.save(any(MovieEntity::class)) } returns movieEntity1.apply {
+            actors = listOf(actor1, actor2)
+            tags = listOf(tag1, tag2)
+            studio = studio1
+        }
+        coEvery { manyToManyRepository.movieActorInsert(1, listOf(1, 2)) } returns Unit
+        coEvery { manyToManyRepository.tagMovieInsert(listOf(1, 2), 1) } returns Unit
+        coEvery { manyToManyRepository.studioMovieInsert(1, 1) } returns Unit
+
+        // when
+        val result = movieService.saveOne(movieDto1)
+
+        // then
+        assertEquals(movieDto1, result)
     }
 
     @Test
     fun getOneShouldReturnDtoWhenOk() = runTest {
+        // given
         coEvery { movieRepository.findById(1) } returns movieEntity1
         coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
         coEvery { tagService.findTagsForMovie(1) } returns listOf(tag1, tag2)
         coEvery { studioService.findStudioForMovie(1) } returns studio1
 
-        assertEquals(movieService.getOne(1), movieDto1)
+        // when
+        val result = movieService.getOne(1)
+
+        // then
+        assertEquals(movieDto1, result)
     }
 
     @Test
     fun findByIdReturnsEntityWhenOk() = runTest {
+        // given
         coEvery { movieRepository.findById(1) } returns movieEntity1
-        assertEquals(movieService.findById(1), movieEntity1)
+
+        // when
+        val result = movieService.findById(1)
+
+        // then
+        assertEquals(movieEntity1, result)
     }
 
     @Test
-    fun getAllYeagerReturnsMultipleMovieDto() = runTest{
+    fun getAllYeagerReturnsMultipleMovieDto() = runTest {
+        // given
+        coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
+        coEvery { actorService.findActorsForMovie(2) } returns listOf(actor3, actor4)
+        coEvery { tagService.findTagsForMovie(1) } returns listOf(tag1, tag2)
+        coEvery { tagService.findTagsForMovie(2) } returns listOf(tag3, tag2)
+        coEvery { studioService.findStudioForMovie(1) } returns studio1
+        coEvery { studioService.findStudioForMovie(2) } returns studio2
+        coEvery { movieRepository.findAll() } returns listOf(movieEntity1, movieEntity2).asFlow()
 
-        assertEquals(movieService.getAllYeager().toList(), listOf(movieDto1, movieDto2))
+        // when
+        val result = movieService.getAllYeager().toList()
+
+
+        assertEquals(listOf(movieDto1, movieDto2), result)
     }
 
     @Test
     fun getAllLazyReturnsMultipleMovieDtoWithoutActorsEtc() = runTest {
-        //todo not working somehow?
+        // given
+        coEvery { movieRepository.findAll() } returns flowOf(movieEntity1, movieEntity2)
         val movieDtoLazy1 = MovieDto(
             id = movieDto1.id,
             name = movieDto1.name,
@@ -264,8 +285,12 @@ class MovieServiceTest {
             budget = movieDto2.budget,
             movieUrl = movieDto2.movieUrl
         )
-        println(movieService.getAllLazy().toList())
-        assertEquals(movieService.getAllLazy().toList(), listOf(movieDtoLazy1, movieDtoLazy2))
+
+        // when
+        val result = movieService.getAllLazy().toList()
+
+        //then
+        assertEquals(listOf(movieDtoLazy1, movieDtoLazy2), result)
     }
 
 
@@ -278,12 +303,12 @@ class MovieServiceTest {
         coEvery { movieRepository.findMoviesByTagId(tag2.id) } returns flowOf(movieEntity1, movieEntity2)
 
         // when
-        val resultFirst = movieService.findByTag("Horror")!!.map { it.id }.toList()
-        val resultSecond = movieService.findByTag("Action")!!.map { it.id }.toList()
+        val result1 = movieService.findByTag("Horror")!!.map { it.id }.toList()
+        val result2 = movieService.findByTag("Action")!!.map { it.id }.toList()
 
         // then
-        assert(resultFirst == listOf(movieEntity1.id))
-        assert(resultSecond == listOf(movieEntity1.id, movieEntity2.id))
+        assert(result1 == listOf(movieEntity1.id))
+        assert(result2 == listOf(movieEntity1.id, movieEntity2.id))
     }
 
     @Test
@@ -293,12 +318,12 @@ class MovieServiceTest {
         coEvery { movieRepository.findFavMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)
 
         // when
-        val resultFirst = movieService.findFavMoviesForCustomerId(1).toList()
-        val resultSecond = movieService.findFavMoviesForCustomerId(2).toList()
+        val result1 = movieService.findFavMoviesForCustomerId(1).toList()
+        val result2 = movieService.findFavMoviesForCustomerId(2).toList()
 
         // then
-        assert(resultFirst == listOf(movieEntity1))
-        assert(resultSecond == listOf(movieEntity1, movieEntity2))
+        assert(result1 == listOf(movieEntity1))
+        assert(result2 == listOf(movieEntity1, movieEntity2))
     }
 
     @Test
@@ -308,12 +333,12 @@ class MovieServiceTest {
         coEvery { movieRepository.findWatchedMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)
 
         // when
-        val resultFirst = movieService.findWatchedMoviesForCustomerId(1).toList()
-        val resultSecond = movieService.findWatchedMoviesForCustomerId(2).toList()
+        val result1 = movieService.findWatchedMoviesForCustomerId(1).toList()
+        val result2 = movieService.findWatchedMoviesForCustomerId(2).toList()
 
         // then
-        assert(resultFirst == listOf(movieEntity1))
-        assert(resultSecond == listOf(movieEntity1, movieEntity2))
+        assert(result1 == listOf(movieEntity1))
+        assert(result2 == listOf(movieEntity1, movieEntity2))
     }
 
 
