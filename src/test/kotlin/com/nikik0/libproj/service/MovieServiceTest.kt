@@ -9,6 +9,7 @@ import com.nikik0.libproj.repositories.MovieRepository
 import com.nikik0.libproj.repositories.TagRepository
 import com.nikik0.libproj.services.*
 import io.mockk.*
+import io.mockk.InternalPlatformDsl.toArray
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.*
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.extension.ExtendWith
 
 //@SpringBootTest
@@ -270,14 +272,19 @@ class MovieServiceTest {
 
     @Test
     fun findByTagReturnsCorrectDto() = runTest {
+        // given
         coEvery { tagService.findByName("Horror") } returns tag1
         coEvery { tagService.findByName("Action") } returns tag2
-        coEvery { movieRepository.findMoviesByTagId(1) } returns flowOf(movieEntity1)
-        coEvery { movieRepository.findMoviesByTagId(2) } returns flowOf(movieEntity1, movieEntity2)
+        coEvery { movieRepository.findMoviesByTagId(tag1.id) } returns flowOf(movieEntity1)
+        coEvery { movieRepository.findMoviesByTagId(tag2.id) } returns flowOf(movieEntity1, movieEntity2)
 
-        println(movieService.findByTag("Horror")?.toList()!!.map { it.id })
-        println(listOf(1))
-        assertEquals(movieService.findByTag("Horror")!!.map { it.id }.toList() , listOf(1).asFlow().toList() )
+        // when
+        val resultFirst = movieService.findByTag("Horror")!!.map { it.id }.toList()
+        val resultSecond = movieService.findByTag("Action")!!.map { it.id }.toList()
+
+        // then
+        assert(resultFirst == listOf(movieEntity1.id))
+        assert(resultSecond == listOf(movieEntity1.id, movieEntity2.id))
     }
 
     @Test
