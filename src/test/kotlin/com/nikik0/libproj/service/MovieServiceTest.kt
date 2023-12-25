@@ -213,7 +213,6 @@ class MovieServiceTest {
         setUpMocks()
     }
 
-    //todo this is a disaster and should be rewritten ( but works smh)
     @Test
     @DisplayName("saveOne returns single corresponding dto for movieDto after saving")
     fun saveOneShouldReturnDtoWhenOK() = runTest {
@@ -288,7 +287,34 @@ class MovieServiceTest {
     }
 
     @Test
-    fun tets(){
-        assertEquals(12, 6+6)
+    fun findFavMoviesReturnsCorrectDto()= runTest{
+        // given
+        coEvery { movieRepository.findFavMoviesForCustomerId(1) } returns flowOf(movieEntity1)
+        coEvery { movieRepository.findFavMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)
+
+        // when
+        val resultFirst = movieService.findFavMoviesForCustomerId(1).toList()
+        val resultSecond = movieService.findFavMoviesForCustomerId(2).toList()
+
+        // then
+        assert(resultFirst == listOf(movieEntity1))
+        assert(resultSecond == listOf(movieEntity1, movieEntity2))
     }
+
+    @Test
+    fun findWatchedMoviesReturnsCorrectDto()= runTest{
+        // given
+        coEvery { movieRepository.findWatchedMoviesForCustomerId(1) } returns flowOf(movieEntity1)
+        coEvery { movieRepository.findWatchedMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)
+
+        // when
+        val resultFirst = movieService.findWatchedMoviesForCustomerId(1).toList()
+        val resultSecond = movieService.findWatchedMoviesForCustomerId(2).toList()
+
+        // then
+        assert(resultFirst == listOf(movieEntity1))
+        assert(resultSecond == listOf(movieEntity1, movieEntity2))
+    }
+
+
 }
