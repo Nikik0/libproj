@@ -23,19 +23,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.*
-import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.extension.ExtendWith
 
-//@SpringBootTest
 @ExtendWith(MockKExtension::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class MovieServiceTest {
     @MockK
-    lateinit var tagRepository: TagRepository
-    @MockK
     lateinit var movieRepository: MovieRepository
-    @MockK
-    lateinit var actorRepository: ActorRepository
     @MockK
     lateinit var actorService: ActorServiceImpl
     @MockK
@@ -44,7 +38,6 @@ class MovieServiceTest {
     lateinit var studioService: StudioServiceImpl
     @MockK
     lateinit var manyToManyRepository: ManyToManyRepository
-    //todo this should point to interface for injection
     @InjectMockKs
     lateinit var movieService: MovieServiceImpl
 
