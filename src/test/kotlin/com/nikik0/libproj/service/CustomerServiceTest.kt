@@ -15,6 +15,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions
@@ -57,11 +58,11 @@ class CustomerServiceTest {
     private lateinit var movieEntity2: MovieEntity
 
     @BeforeEach
-    fun setup(){
+    fun setup() {
         setupTestEntities()
     }
 
-    private fun setupTestEntities(){
+    private fun setupTestEntities() {
         address1 = AddressEntity(
             id = 1,
             country = "First country",
@@ -129,14 +130,46 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun getCustomerReturnsCorrectDto() = runTest{
+    fun getCustomerReturnsCorrectDto() = runTest {
+        // given
+        coEvery { addressRepository.save(address1) } returns address1
+        coEvery { addressRepository.save(address2) } returns address2
+        coEvery { customerRepository.findById(1) } returns customerEntity1.apply {
+            watched = listOf(movieEntity1, movieEntity2)
+            favorites = listOf(movieEntity1)
+        }
+        coEvery { customerRepository.findById(2) } returns customerEntity2
+        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
+        coEvery { manyToManyRepository.customerAddressInsert(customerEntity2.id, address2.id) } returns Unit
+        coEvery { addressRepository.findAddressForCustomerId(1) } returns flowOf(address1)
+        coEvery { addressRepository.findAddressForCustomerId(2) } returns flowOf(address2)
+        coEvery { movieService.findWatchedMoviesForCustomerId(1) } returns flowOf(movieEntity1, movieEntity2)
+        coEvery { movieService.findWatchedMoviesForCustomerId(2) } returns flowOf()
+        coEvery { movieService.findFavMoviesForCustomerId(1) } returns flowOf(movieEntity1)
+        coEvery { movieService.findFavMoviesForCustomerId(2) } returns flowOf()
 
+        // when
+        val result1 = customerService.getCustomer(customerDto1.id)
+        val result2 = customerService.getCustomer(customerDto2.id)
 
+        // then
+        assertEquals(customerEntity1.apply {
+            watched = listOf(movieEntity1, movieEntity2)
+            favorites = listOf(movieEntity1)
+        }.toDtoYeager(), result1)
+        assertEquals(customerDto2, result2)
     }
 
     @Test
     fun getAllReturnsCorrectFlowWithDtos() = runTest {
+        // given
+        coEvery { customerRepository.findAll() } returns flowOf(customerEntity1, customerEntity2)
 
+        // when
+        val result = customerService.getAllCustomers().toList()
+
+        // then
+        assertEquals(listOf(customerDto1, customerDto2), result)
     }
 
     @Test
@@ -173,11 +206,39 @@ class CustomerServiceTest {
 
     @Test
     fun addToWatchedAddsMovieToWatchedForSpecifiedCustomer() = runTest {
+        // given
+        coEvery { movieService.findById(1) } returns movieEntity1
+        coEvery { customerRepository.findById(1) } returns customerEntity1
+        coEvery { manyToManyRepository.customerWatchedMovieInsert(1, 1) } returns Unit
+        coEvery { customerRepository.save(any()) } returns customerEntity1
+        coEvery { addressRepository.findAddressForCustomerId(1) } returns flowOf(address1)
 
+        // when
+        val result = customerService.addToWatched(1, movieEntity1.mapToDto())
+
+        // then
+        assertEquals(customerEntity1.apply {
+            watched = listOf(movieEntity1)
+            favorites = listOf()
+        }.toDtoYeager(), result)
     }
 
     @Test
     fun addToFavAddMovieToFavForSpecifiedCustomer() = runTest {
+        // given
+        coEvery { movieService.findById(1) } returns movieEntity1
+        coEvery { customerRepository.findById(1) } returns customerEntity1
+        coEvery { manyToManyRepository.customerFavouriteMovieInsert(1, 1) } returns Unit
+        coEvery { customerRepository.save(any()) } returns customerEntity1
+        coEvery { addressRepository.findAddressForCustomerId(1) } returns flowOf(address1)
 
+        // when
+        val result = customerService.addToFavourites(1, movieEntity1.mapToDto())
+
+        // then
+        assertEquals(customerEntity1.apply {
+            watched = listOf()
+            favorites = listOf(movieEntity1)
+        }.toDtoYeager(), result)
     }
 }
