@@ -11,9 +11,9 @@ import org.springframework.stereotype.Repository
 @Repository
 interface MovieRepository: CoroutineCrudRepository<MovieEntity,Long> {
 
-    @Query("select * from movie mw join customer_favourite_movies cfm on mw.id = cfm.favourite_movie_id where mw.id = :movieId")
+    @Query("select * from movie mw join customer_favourite_movies cfm on mw.id = cfm.favourite_movie_id where cfm.customer_id = :customerId")
     fun findFavMoviesForCustomerId(customerId: Long): Flow<MovieEntity>
-    @Query("select * from movie mw join customer_watched_movies cwm on mw.id = cwm.watched_movie_id where mw.id = :movieId")
+    @Query("select * from movie mw join customer_watched_movies cwm on mw.id = cwm.watched_movie_id where cwm.customer_id = :customerId")
     fun findWatchedMoviesForCustomerId(customerId: Long): Flow<MovieEntity>
     @Query("select * from movie m join tag_movie tm on m.id = tm.movie_id where tm.tag_id = :tagId")
     fun findMoviesByTagId(tagId: Long): Flow<MovieEntity>
