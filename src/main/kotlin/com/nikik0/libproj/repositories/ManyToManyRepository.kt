@@ -4,6 +4,8 @@ import io.r2dbc.spi.Result
 import org.reactivestreams.Publisher
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
+import org.springframework.r2dbc.core.awaitSingle
+import org.springframework.r2dbc.core.awaitSingleOrNull
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.kotlin.core.publisher.toFlux
@@ -104,6 +106,10 @@ class ManyToManyRepository (
             .bind(1, movieId)
             .await()
     }
+
+    suspend fun checkIfCustomerWatchedMovie(customerId: Long, movieId: Long) =
+        client.sql("SELECT 1 from customer_watched_movies where customer_id = $customerId and watched_movie_id = $movieId")
+            .fetch().awaitSingleOrNull() != null
 
     suspend fun movieActorInsert(movieId: Long, ActorId: Long){
         client.sql("INSERT into movie_actor values ($1, $2)")
