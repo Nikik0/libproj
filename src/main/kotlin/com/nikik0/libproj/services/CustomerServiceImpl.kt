@@ -10,48 +10,53 @@ import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class CustomerServiceImpl (
+class CustomerServiceImpl(
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
-    //private val movieRepository: MovieRepository,
     private val manyToManyRepository: ManyToManyRepository,
     private val movieService: MovieService
-        ) : CustomerService {
+) : CustomerService {
 
 
-    override suspend fun getCustomer(id: Long) = customerRepository.findById(id)?.apply {
-        this.address = addressRepository.findAddressForCustomerId(this.id).toList().first()
-    }?.toDtoYeager()
+    override suspend fun getCustomer(id: Long) =
+        customerRepository.findById(id)?.apply {
+            address = addressRepository.findAddressForCustomerId(this.id).toList().first()
+            watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
+            favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
+        }?.toDtoYeager()
+    //todo dtoYeager is useless and should be removed
 
     override suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
 
-    override suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity {
-        val address = addressRepository.save(customer.mapToAddress())
-        val savedCustomer = customerRepository.findById(customer.id)  //todo might want to check if customer exists or id is null, otherwise throw exception
-            ?.let {
-                customerRepository.save(
-                    CustomerEntity(
-                        id = it.id,
-                        name = it.name,
-                        surname = it.surname
-                    )
-                )
-            }
-            ?: customerRepository.save(
-                CustomerEntity(
-                    id = customer.id,
-                    name = customer.name,
-                    surname = customer.surname
-                )
-            )
-        savedCustomer.address = address
-        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
-        return savedCustomer
-    }
+//    override suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity {
+//        val address = addressRepository.save(customer.mapToAddress())
+//        val savedCustomer =
+//            customerRepository.findById(customer.id)  //todo might want to check if customer exists or id is null, otherwise throw exception
+//                ?.let {
+//                    customerRepository.save(
+//                        CustomerEntity(
+//                            id = it.id,
+//                            name = it.name,
+//                            surname = it.surname
+//                        )
+//                    )
+//                }
+//                ?: customerRepository.save(
+//                    CustomerEntity(
+//                        id = customer.id,
+//                        name = customer.name,
+//                        surname = customer.surname
+//                    )
+//                )
+//        savedCustomer.address = address
+//        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
+//        return savedCustomer
+//    }
 
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
@@ -65,10 +70,11 @@ class CustomerServiceImpl (
                     address = address,
                     watched = it.watched,
                     favorites = it.favorites
+                    //todo save same movies to watched should be checked, multiple same movies are trash
+                    //todo need to check if this actually saves watched and stuff
                 )
             )
-        } ?:
-        let {
+        } ?: let {
             customerRepository.save(
                 CustomerEntity(
                     id = customerDto.id,
@@ -89,27 +95,29 @@ class CustomerServiceImpl (
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
+    //todo shouldn't be able to add to fav if movie not in watched
     @Transactional
     override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto? {
         val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
-        println("from service film found $movieEntity for customer $customerEntity")
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
-            customerRepository.save(
-                CustomerEntity(
-                    id = customerEntity.id,
-                    name = customerEntity.name,
-                    surname = customerEntity.surname,
-                    address = customerEntity.address,
-                    watched = customerEntity.watched + movieEntity,
-                    favorites = customerEntity.favorites
-                )
-            ).apply {
-                this.address = addressRepository.findAddressForCustomerId(this.id).first()
-            }.toDtoYeager()
+            // todo unsure if the transaction works well with internal method
+//            customerRepository.save(
+//                CustomerEntity(
+//                    id = customerEntity.id,
+//                    name = customerEntity.name,
+//                    surname = customerEntity.surname,
+//                    address = customerEntity.address,
+//                    watched = customerEntity.watched,
+//                    favorites = customerEntity.favorites + movieEntity
+//                )
+//            ).apply {
+//                this.address = addressRepository.findAddressForCustomerId(this.id).first()
+//            }.toDtoYeager()
+            this.getCustomer(customerEntity.id)
         } else {
-            null
+            null //throw NotFoundEntityException()
         }
     }
 
@@ -117,20 +125,22 @@ class CustomerServiceImpl (
     override suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto? {
         val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
+        println("from service film found $movieEntity for customer $customerEntity")
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
-            customerRepository.save(
-                CustomerEntity(
-                    id = customerEntity.id,
-                    name = customerEntity.name,
-                    surname = customerEntity.surname,
-                    address = customerEntity.address,
-                    watched = customerEntity.watched,
-                    favorites = customerEntity.favorites + movieEntity
-                )
-            ).apply {
-                this.address = addressRepository.findAddressForCustomerId(this.id).first()
-            }.toDtoYeager()
+//            customerRepository.save(
+//                CustomerEntity(
+//                    id = customerEntity.id,
+//                    name = customerEntity.name,
+//                    surname = customerEntity.surname,
+//                    address = customerEntity.address,
+//                    watched = customerEntity.watched,
+//                    favorites = customerEntity.favorites + movieEntity
+//                )
+//            ).apply {
+//                this.address = addressRepository.findAddressForCustomerId(this.id).first()
+//            }.toDtoYeager()
+            this.getCustomer(customerEntity.id)
         } else {
             null
         }
