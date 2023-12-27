@@ -22,7 +22,6 @@ class CustomerServiceImpl(
     private val movieService: MovieService
 ) : CustomerService {
 
-
     override suspend fun getCustomer(id: Long) =
         customerRepository.findById(id)?.apply {
             address = addressRepository.findAddressForCustomerId(this.id).toList().first()
@@ -33,31 +32,8 @@ class CustomerServiceImpl(
 
     override suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
 
-//    override suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity {
-//        val address = addressRepository.save(customer.mapToAddress())
-//        val savedCustomer =
-//            customerRepository.findById(customer.id)  //todo might want to check if customer exists or id is null, otherwise throw exception
-//                ?.let {
-//                    customerRepository.save(
-//                        CustomerEntity(
-//                            id = it.id,
-//                            name = it.name,
-//                            surname = it.surname
-//                        )
-//                    )
-//                }
-//                ?: customerRepository.save(
-//                    CustomerEntity(
-//                        id = customer.id,
-//                        name = customer.name,
-//                        surname = customer.surname
-//                    )
-//                )
-//        savedCustomer.address = address
-//        manyToManyRepository.customerAddressInsert(savedCustomer.id, address.id)
-//        return savedCustomer
-//    }
 
+    // todo save with watched and favs is useless, should be reworked
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
         val address = addressRepository.save(customerDto.mapToAddress())
@@ -103,18 +79,6 @@ class CustomerServiceImpl(
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
             // todo unsure if the transaction works well with internal method
-//            customerRepository.save(
-//                CustomerEntity(
-//                    id = customerEntity.id,
-//                    name = customerEntity.name,
-//                    surname = customerEntity.surname,
-//                    address = customerEntity.address,
-//                    watched = customerEntity.watched,
-//                    favorites = customerEntity.favorites + movieEntity
-//                )
-//            ).apply {
-//                this.address = addressRepository.findAddressForCustomerId(this.id).first()
-//            }.toDtoYeager()
             this.getCustomer(customerEntity.id)
         } else {
             null //throw NotFoundEntityException()
@@ -125,29 +89,12 @@ class CustomerServiceImpl(
     override suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto? {
         val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
-        println("from service film found $movieEntity for customer $customerEntity")
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
-//            customerRepository.save(
-//                CustomerEntity(
-//                    id = customerEntity.id,
-//                    name = customerEntity.name,
-//                    surname = customerEntity.surname,
-//                    address = customerEntity.address,
-//                    watched = customerEntity.watched,
-//                    favorites = customerEntity.favorites + movieEntity
-//                )
-//            ).apply {
-//                this.address = addressRepository.findAddressForCustomerId(this.id).first()
-//            }.toDtoYeager()
             this.getCustomer(customerEntity.id)
         } else {
-            null
+            null //throw NotFoundEntityException()
         }
     }
-
-
-    override suspend fun test() =
-        movieService.findWatchedMoviesForCustomerId(1)
 
 }
