@@ -71,7 +71,6 @@ class CustomerServiceImpl(
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
-    //todo shouldn't be able to add to fav if movie not in watched
     @Transactional
     override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto? {
         val movieEntity = movieService.findById(movieDto.id)
@@ -90,11 +89,13 @@ class CustomerServiceImpl(
         val movieEntity = movieService.findById(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
+            if (!manyToManyRepository.checkIfCustomerWatchedMovie(customerId, movieEntity.id)) return null // todo throw meaningful exception
             manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
             this.getCustomer(customerEntity.id)
         } else {
             null //throw NotFoundEntityException()
         }
     }
+
 
 }
