@@ -12,8 +12,6 @@ interface CustomerService {
 
     suspend fun getAllCustomers(): Flow<CustomerDto>
 
-    suspend fun saveNewCustomerTest(customer: CustomerDto): CustomerEntity
-
     @Transactional
     suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto?
 
@@ -25,5 +23,4 @@ interface CustomerService {
     @Transactional
     suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto?
 
-    suspend fun test(): Flow<MovieEntity>
 }
