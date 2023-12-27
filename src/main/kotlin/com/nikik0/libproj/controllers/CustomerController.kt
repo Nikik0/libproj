@@ -24,7 +24,6 @@ class CustomerController (
     @GetMapping("/get/{id}")
     suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
-
     @PostMapping("/save")
     suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
         customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
@@ -43,45 +42,9 @@ class CustomerController (
     //todo refactor customer to include yeager init for dto that includes watched and fav lists
     //todo add complicated saving for watched and favs in db
 
-
-//    @PostMapping("/{id}/favourites/add")
-//    suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto): ResponseEntity<CustomerDto> {
-//        val tt = customerService.addToFavourites(id, movieDto)
-//        println(tt)
-//        return tt?.let { ResponseEntity.ok(it) }
-//            ?: ResponseEntity(HttpStatus.BAD_REQUEST)
-//    }
-
     @PostMapping("/{id}/favourites/add")
     suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
         customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) }
             ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
-
-    @PostMapping("/ugh")
-    suspend fun testSaving(@RequestBody customerDto: CustomerDto): CustomerDto {
-            println(customerDto)
-//            return customerService.saveNewCustomerTest(customerDto)
-            return CustomerDto(
-                 2,
-             "Dad",
-             "Dew",
-             "dasd",
-             "eew",
-             "ee",
-             "rr",
-             "qwe",
-             1,
-             "asd",
-             23,
-             "asd",
-                emptyList(),
-                emptyList()
-            )
-        }
-    @GetMapping("/testget")
-    suspend fun testGet(): Flow<MovieEntity> {
-//            return customerService.saveNewCustomerTest(customerDto)
-        return customerService.test()
-    }
 }
