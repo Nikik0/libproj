@@ -10,7 +10,6 @@ import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -73,7 +72,7 @@ class CustomerServiceImpl(
 
     @Transactional
     override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto? {
-        val movieEntity = movieService.findById(movieDto.id)
+        val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
@@ -86,7 +85,7 @@ class CustomerServiceImpl(
 
     @Transactional
     override suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto? {
-        val movieEntity = movieService.findById(movieDto.id)
+        val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
             if (!manyToManyRepository.checkIfCustomerWatchedMovie(customerId, movieEntity.id)) return null // todo throw meaningful exception

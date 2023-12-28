@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import org.springframework.transaction.annotation.Transactional
 
 interface MovieService {
-    suspend fun getOne(id: Long): MovieDto?
+    suspend fun getOneYeager(id: Long): MovieDto?
 
     @Transactional
     suspend fun saveOne(movieDto: MovieDto): MovieDto
@@ -21,5 +21,5 @@ interface MovieService {
 
     suspend fun findWatchedMoviesForCustomerId(customerId: Long): Flow<MovieEntity>
 
-    suspend fun findById(movieId: Long): MovieEntity?
+    suspend fun getOneLazy(movieId: Long): MovieEntity?
 }
