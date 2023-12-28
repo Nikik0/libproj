@@ -2,7 +2,6 @@ package com.nikik0.libproj.controllers
 
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.services.MovieService
-import com.nikik0.libproj.services.MovieServiceImpl
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,7 +18,7 @@ class MovieController (
     private val movieService: MovieService
         ){
     @GetMapping("/get/{id}")
-    suspend fun getSingle(@PathVariable id: Long) = movieService.getOne(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    suspend fun getSingle(@PathVariable id: Long) = movieService.getOneYeager(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @GetMapping("/get/all/yeager")
     suspend fun getAll() = movieService.getAllYeager().let { ResponseEntity.ok(it) }

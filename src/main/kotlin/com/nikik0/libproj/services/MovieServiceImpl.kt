@@ -17,7 +17,7 @@ class MovieServiceImpl(
     private val manyToManyRepository: ManyToManyRepository
 ) : MovieService {
 
-    override suspend fun getOne(id: Long) =
+    override suspend fun getOneYeager(id: Long) =
         movieRepository.findById(id)?.apply {
             this.actors = actorService.findActorsForMovie(this.id)
             this.studio = studioService.findStudioForMovie(this.id)
@@ -61,6 +61,6 @@ class MovieServiceImpl(
     override suspend fun findWatchedMoviesForCustomerId(customerId: Long) =
         movieRepository.findWatchedMoviesForCustomerId(customerId)
 
-    override suspend fun findById(movieId: Long) =
+    override suspend fun getOneLazy(movieId: Long) =
         movieRepository.findById(movieId)
 }
