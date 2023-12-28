@@ -421,11 +421,15 @@ class IntegrationTests(
     }
 
     @Test
-    fun `add to watched returns dto with correct favourites list`(){
+    fun `add to favs returns dto with correct favourites list`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
         val movie = webClient.get().uri("/api/v1/movie/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<MovieDto>().responseBody.blockLast()
+        webClient.post().uri("/api/v1/customer/${customer!!.id}/watched/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
         val customerUpdated = webClient.post().uri("/api/v1/customer/${customer!!.id}/favourites/add")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieSavedFirstDummy!!).exchange()
