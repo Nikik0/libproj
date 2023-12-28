@@ -3,19 +3,15 @@ package com.nikik0.libproj.service
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToEntity
 import com.nikik0.libproj.entities.*
-import com.nikik0.libproj.repositories.ActorRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
 import com.nikik0.libproj.repositories.MovieRepository
-import com.nikik0.libproj.repositories.TagRepository
 import com.nikik0.libproj.services.*
 import io.mockk.*
-import io.mockk.InternalPlatformDsl.toArray
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.asFlow
@@ -185,8 +181,7 @@ class MovieServiceTest {
     }
 
     @Test
-    @DisplayName("saveOne returns single corresponding dto for movieDto after saving")
-    fun saveOneShouldReturnDtoWhenOK() = runTest {
+    fun `saveOne returns correct movie dto when ok`() = runTest {
         // given
         coEvery { tagService.saveTagIfNotPresent(tag1) } returns tag1
         coEvery { tagService.saveTagIfNotPresent(tag2) } returns tag2
@@ -210,7 +205,7 @@ class MovieServiceTest {
     }
 
     @Test
-    fun getOneShouldReturnDtoWhenOk() = runTest {
+    fun `getOneYeager returns correct movie dto when ok`() = runTest {
         // given
         coEvery { movieRepository.findById(1) } returns movieEntity1
         coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
@@ -218,26 +213,26 @@ class MovieServiceTest {
         coEvery { studioService.findStudioForMovie(1) } returns studio1
 
         // when
-        val result = movieService.getOne(1)
+        val result = movieService.getOneYeager(1)
 
         // then
         assertEquals(movieDto1, result)
     }
 
     @Test
-    fun findByIdReturnsEntityWhenOk() = runTest {
+    fun `getOneLazy returns correct movie entity when ok`() = runTest {
         // given
         coEvery { movieRepository.findById(1) } returns movieEntity1
 
         // when
-        val result = movieService.findById(1)
+        val result = movieService.getOneLazy(1)
 
         // then
         assertEquals(movieEntity1, result)
     }
 
     @Test
-    fun getAllYeagerReturnsMultipleMovieDto() = runTest {
+    fun `getAllYeager returns flow with correct dtos when ok`() = runTest {
         // given
         coEvery { actorService.findActorsForMovie(1) } returns listOf(actor1, actor2)
         coEvery { actorService.findActorsForMovie(2) } returns listOf(actor3, actor4)
@@ -250,12 +245,11 @@ class MovieServiceTest {
         // when
         val result = movieService.getAllYeager().toList()
 
-
         assertEquals(listOf(movieDto1, movieDto2), result)
     }
 
     @Test
-    fun getAllLazyReturnsMultipleMovieDtoWithoutActorsEtc() = runTest {
+    fun `getAllLazy returns flow with correct dtos with empty list of actors, tags and studio when ok`() = runTest {
         // given
         coEvery { movieRepository.findAll() } returns flowOf(movieEntity1, movieEntity2)
         val movieDtoLazy1 = MovieDto(
@@ -288,7 +282,7 @@ class MovieServiceTest {
 
 
     @Test
-    fun findByTagReturnsCorrectDto() = runTest {
+    fun `findByTag returns correct dtos for different tags when ok`() = runTest {
         // given
         coEvery { tagService.findByName("Horror") } returns tag1
         coEvery { tagService.findByName("Action") } returns tag2
@@ -305,7 +299,7 @@ class MovieServiceTest {
     }
 
     @Test
-    fun findFavMoviesReturnsCorrectDto()= runTest{
+    fun `findFavMoviesForCustomerId returns flow with correct dtos when ok`()= runTest{
         // given
         coEvery { movieRepository.findFavMoviesForCustomerId(1) } returns flowOf(movieEntity1)
         coEvery { movieRepository.findFavMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)
@@ -320,7 +314,7 @@ class MovieServiceTest {
     }
 
     @Test
-    fun findWatchedMoviesReturnsCorrectDto()= runTest{
+    fun `findWatchedMoviesForCustomerId returns flow with correct dtos when ok`()= runTest{
         // given
         coEvery { movieRepository.findWatchedMoviesForCustomerId(1) } returns flowOf(movieEntity1)
         coEvery { movieRepository.findWatchedMoviesForCustomerId(2) } returns flowOf(movieEntity1, movieEntity2)

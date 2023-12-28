@@ -1,12 +1,10 @@
 package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
-import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
-import com.nikik0.libproj.services.CustomerService
 import com.nikik0.libproj.services.CustomerServiceImpl
 import com.nikik0.libproj.services.MovieService
 import io.mockk.coEvery
@@ -18,7 +16,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -130,7 +127,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun getCustomerReturnsCorrectDto() = runTest {
+    fun `getCustomer return correct dto for the customer`() = runTest {
         // given
         coEvery { addressRepository.save(address1) } returns address1
         coEvery { addressRepository.save(address2) } returns address2
@@ -161,7 +158,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun getAllReturnsCorrectFlowWithDtos() = runTest {
+    fun `getAll returns flow with correct dtos`() = runTest {
         // given
         coEvery { customerRepository.findAll() } returns flowOf(customerEntity1, customerEntity2)
 
@@ -173,7 +170,7 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun saveCustomerReturnsSavedCustomer() = runTest {
+    fun `saveCustomer returns correct dto of the saved customer`() = runTest {
         // given
         coEvery { addressRepository.save(address1) } returns address1
         coEvery { addressRepository.save(address2) } returns address2
@@ -205,9 +202,9 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun addToWatchedAddsMovieToWatchedForSpecifiedCustomer() = runTest {
+    fun `addToWatched returns customer dto with movie added to watched`() = runTest {
         // given
-        coEvery { movieService.findById(movieEntity1.id) } returns movieEntity1
+        coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1
         coEvery { manyToManyRepository.customerWatchedMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
@@ -227,9 +224,9 @@ class CustomerServiceTest {
     }
 
     @Test
-    fun addToFavAddsMovieToFavForSpecifiedCustomerIfMovieIsInWatched() = runTest {
+    fun `addToFavourites returns correct customer dto with movie in favs if the movie was in watched`() = runTest {
         // given
-        coEvery { movieService.findById(movieEntity1.id) } returns movieEntity1
+        coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
             watched = listOf(movieEntity1)
         }
@@ -251,10 +248,11 @@ class CustomerServiceTest {
         }.toDtoYeager(), result)
     }
 
+    // todo this will throw exception later
     @Test
-    fun addToFavDoesntAddMovieToFavForSpecifiedCustomerIfMovieIsntInWatched() = runTest {
+    fun `addToFavourites returns null with movie in favs if the movie was not in watched`() = runTest {
         // given
-        coEvery { movieService.findById(movieEntity1.id) } returns movieEntity1
+        coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
             watched = listOf(movieEntity1)
         }
