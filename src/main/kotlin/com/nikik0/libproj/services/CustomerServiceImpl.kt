@@ -6,10 +6,16 @@ import com.nikik0.libproj.dtos.mapToAddress
 import com.nikik0.libproj.entities.CustomerEntity
 import com.nikik0.libproj.entities.toDto
 import com.nikik0.libproj.entities.toDtoYeager
+import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
+import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
+import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
+import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -71,15 +77,17 @@ class CustomerServiceImpl(
         customerRepository.deleteById(customer.id)
 
     @Transactional
-    override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto? {
+    override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto {
         val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
             manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
-            // todo unsure if the transaction works well with internal method
-            this.getCustomer(customerEntity.id)
+            this.getCustomer(customerEntity.id)?: throw NotFoundEntityResponseException(HttpStatusCode.valueOf(404), ProblemDetail.forStatus(404), NotFoundException(), null, null)//null //throw NotFoundEntityException()
         } else {
-            null //throw NotFoundEntityException()
+            throw NotFoundEntityResponseException(
+                HttpStatus.NOT_FOUND,
+                if (customerEntity == null) "Customer with id: $customerId not found" else "Movie with id: ${movieDto.id} not found"
+            )
         }
     }
 
@@ -88,11 +96,14 @@ class CustomerServiceImpl(
         val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
-            if (!manyToManyRepository.checkIfCustomerWatchedMovie(customerId, movieEntity.id)) return null // todo throw meaningful exception
+            if (!manyToManyRepository.checkIfCustomerWatchedMovie(customerId, movieEntity.id)) throw MovieNotInWatchedResponseException(HttpStatus.NOT_ACCEPTABLE, "Movie with id ${movieEntity.id} wasn't added to watched, unable to add it to favourites")
             manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
             this.getCustomer(customerEntity.id)
         } else {
-            null //throw NotFoundEntityException()
+            throw NotFoundEntityResponseException(
+                HttpStatus.NOT_FOUND,
+                if (customerEntity == null) "Customer with id: $customerId not found" else "Movie with id: ${movieDto.id} not found"
+            )
         }
     }
 
