@@ -78,7 +78,7 @@ class StudioServiceTest {
     }
 
     @Test
-    fun `saveStudioIfNotPresent should return new saved studio if studio with name was found in db`() = runTest {
+    fun `saveStudioIfNotPresent should return found studio if studio with name was found in db`() = runTest {
         // given
         coEvery { studioRepository.save(studioEntity1) } returns studioEntity1
         coEvery { studioRepository.findByName(studioEntity1.name) } returns studioEntity1
