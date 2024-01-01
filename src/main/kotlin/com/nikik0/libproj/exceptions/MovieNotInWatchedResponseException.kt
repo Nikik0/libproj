@@ -13,7 +13,7 @@ class MovieNotInWatchedResponseException(
 ): ErrorResponseException(status, body, cause, messageDetailCode, messageDetailArguments) {
     constructor(status: HttpStatusCode, message: String): this(
         status,
-        ProblemDetail.forStatus(status),
+        ProblemDetail.forStatusAndDetail(status, message),
         MovieNotInWatchedException(),
         message,
         null
