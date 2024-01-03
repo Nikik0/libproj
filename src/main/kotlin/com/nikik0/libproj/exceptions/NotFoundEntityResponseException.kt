@@ -15,7 +15,7 @@ class NotFoundEntityResponseException(
 
     constructor(status: HttpStatusCode, missingMessage: String) : this(
         status,
-        ProblemDetail.forStatus(status),
+        ProblemDetail.forStatusAndDetail(status, missingMessage),
         NotFoundException(),
         missingMessage,
         null

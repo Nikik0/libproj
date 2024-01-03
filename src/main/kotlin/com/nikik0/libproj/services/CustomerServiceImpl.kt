@@ -39,6 +39,45 @@ class CustomerServiceImpl(
 
 
     // todo save with watched and favs is useless, should be reworked
+//    @Transactional
+//    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
+//        val address = addressRepository.save(customerDto.mapToAddress())
+//        val customerEntity = customerRepository.findById(customerDto.id)?.let {
+//            customerRepository.save(
+//                CustomerEntity(
+//                    id = it.id,
+//                    name = customerDto.name,
+//                    surname = customerDto.surname,
+//                    address = address,
+//                    watched = it.watched,
+//                    favorites = it.favorites
+//                    //todo save same movies to watched should be checked, multiple same movies are trash
+//                    //todo need to check if this actually saves watched and stuff
+//                )
+//            )
+//        } ?: let {
+//            customerRepository.save(
+//                CustomerEntity(
+//                    id = customerDto.id,
+//                    name = customerDto.name,
+//                    surname = customerDto.surname,
+//                    address = address,
+//                    watched = emptyList(),
+//                    favorites = emptyList()
+//                )
+//            )
+//        }
+//        //todo unsure if this is needed
+//        customerDto.watched?.map { movieService.saveOne(it) }
+//        customerDto.favourites?.map { movieService.saveOne(it) }
+//        //todo unsure if this will work in the same transaction (might need to explicitly check for bad entries in favs and watched)
+//        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
+//        return customerEntity.apply {
+//            this.address = addressRepository.findAddressForCustomerId(this.id).first()
+//        }.toDto()
+//    }
+
+    //todo this is what saving is supposed to look like ig
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
         val address = addressRepository.save(customerDto.mapToAddress())
@@ -51,8 +90,6 @@ class CustomerServiceImpl(
                     address = address,
                     watched = it.watched,
                     favorites = it.favorites
-                    //todo save same movies to watched should be checked, multiple same movies are trash
-                    //todo need to check if this actually saves watched and stuff
                 )
             )
         } ?: let {
@@ -66,12 +103,55 @@ class CustomerServiceImpl(
                     favorites = emptyList()
                 )
             )
+        } //todo this should throw some form of meaningful exception
+        // todo i have no idea if this will work
+        val savedWatchedMovies = customerDto.watched?.map { addToWatched(customerEntity.id, it) }
+        if (!savedWatchedMovies.isNullOrEmpty() && !customerDto.favourites.isNullOrEmpty()) {
+            customerDto.favourites.map { addToFavourites(customerEntity.id, it) }
+
+//            savedWatchedMovies.intersect(customerDto.favourites.toSet()).map {
+//                addToFavourites(
+//                    customerEntity.id,
+//                    it as MovieDto
+//                )
+//            }
         }
+
+        // todo doesn't work, supposedly cuz transaction hasn't been committed so there are no address and stuff for customer
         manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
         return customerEntity.apply {
             this.address = addressRepository.findAddressForCustomerId(this.id).first()
-        }.toDto()
+            this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
+            this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
+        }.toDtoYeager()
     }
+
+//    //todo another version for saving
+//    @Transactional
+//    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
+//        val address = addressRepository.save(customerDto.mapToAddress())
+//        val smth = customerDto.watched?.run { addToWatched(customerDto.id) }
+//        val customerEntity =
+//            customerRepository.save(
+//                CustomerEntity(
+//                    id = customerDto.id,
+//                    name = customerDto.name,
+//                    surname = customerDto.surname,
+//                    address = address,
+//                    watched = customerDto.watched?.let {},
+//                    favorites = customerDto.favourites?.map { addToFavourites(customerDto.id, it) }
+//                )
+//            )
+//
+//        //todo unsure if this is needed
+//        customerDto.watched?.map { movieService.saveOne(it) }
+//        customerDto.favourites?.map { movieService.saveOne(it) }
+//        //todo unsure if this will work in the same transaction (might need to explicitly check for bad entries in favs and watched)
+//        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
+//        return customerEntity.apply {
+//            this.address = addressRepository.findAddressForCustomerId(this.id).first()
+//        }.toDto()
+//    }
 
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
