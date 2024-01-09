@@ -30,8 +30,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @Testcontainers
 class IntegrationTests(
     @Autowired
-    val webClient: WebTestClient
-    ,
+    val webClient: WebTestClient,
     @Autowired
     val client: DatabaseClient
 ) {
@@ -75,7 +74,9 @@ class IntegrationTests(
             "building": 1,
             "buildingLiteral": "First literal",
             "apartmentNumber": 23,
-            "additionalInfo": "First additional info"
+            "additionalInfo": "First additional info",
+            "watched": [],
+            "favourites":[]
         }
     """.trimIndent()
 
