@@ -82,12 +82,8 @@ class CustomerServiceImpl(
     // todo save with watched and favs is useless, should be reworked
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
-        println("saving started")
         val address = addressRepository.save(customerDto.mapToAddress())
-
-        println("address saved")
-
-
+        // todo autoincrement works for customer even if exception occurred
         val customerEntity = customerRepository.findById(customerDto.id)?.let {
             customerRepository.save(
                 CustomerEntity(
@@ -113,103 +109,21 @@ class CustomerServiceImpl(
                 )
             )
         }
-        println("customer has been saved $customerEntity")
-        println("watched list of dto is ${customerDto.watched}")
-        val d = customerDto.watched?.map { movieService.getOneLazy(it.id)?.mapToDto() }
-        println("d is $d")
-        d?.forEach { println(it) }
-        println("bruh")
-        println(d.isNullOrEmpty())
-        val movieDto1 = d?.first()
-        println("movieD $movieDto1")
-        if (movieDto1 != null){
-            val a = addToWatched(customerEntity.id, movieDto1)
-            println("this is a $a")
-        }else{
-            println("WHAAAAAAAAAT")
-        }
-        println("what the fuck is going on")
-
-//        d?.forEach { addToWatched(customerEntity.id, it!!) }
-
-        println("main batch save for watched starting now")
-//        //todo unsure if this is needed
-//        customerDto.watched?.map { movieService.saveOne(it) }
-//        customerDto.favourites?.map { movieService.saveOne(it) }
         customerDto.watched?.forEach { addToWatched(customerEntity.id, it) }
-        println("watched should be saved now")
-
-        println("now trying to get list of saved watched movies for customer")
-        val watched = movieService.findWatchedMoviesForCustomerId(customerEntity.id).toList()
-        println("watched movies are $watched")
-
-        println("now trying to get address for customer")
-        val addressSaved = addressRepository.findAddressForCustomerId(customerEntity.id).first()
-        println("address of the customer is $addressSaved")
-        //todo unsure if this will work in the same transaction (might need to explicitly check for bad entries in favs and watched)
+        customerDto.favourites?.forEach { addToFavourites(customerEntity.id, it) }
         manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
         return customerEntity.apply {
             this.address = addressRepository.findAddressForCustomerId(this.id).first()
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
-        }.toDto()
+            this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
+        }.toDtoYeager()
     }
-
-//    //todo this is what saving is supposed to look like ig
-//    @Transactional
-//    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
-//        val address = addressRepository.save(customerDto.mapToAddress())
-//        val customerEntity =
-//            customerRepository.save(
-//                CustomerEntity(
-//                    id = customerDto.id,
-//                    name = customerDto.name,
-//                    surname = customerDto.surname
-//                )
-//            )
-//        customerDto.watched?.forEach { addToWatched(customerEntity.id, it) }
-//        customerDto.favourites?.forEach { addToFavourites(customerEntity.id, it) }
-//        // todo doesn't work, supposedly cuz transaction hasn't been committed so there are no address and stuff for customer
-//        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
-//        return customerEntity.apply {
-//            this.address = addressRepository.findAddressForCustomerId(this.id).first()
-////            this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
-////            this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-//        }.toDtoYeager()
-//    }
-
-//    //todo another version for saving
-//    @Transactional
-//    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
-//        val address = addressRepository.save(customerDto.mapToAddress())
-//        val smth = customerDto.watched?.run { addToWatched(customerDto.id) }
-//        val customerEntity =
-//            customerRepository.save(
-//                CustomerEntity(
-//                    id = customerDto.id,
-//                    name = customerDto.name,
-//                    surname = customerDto.surname,
-//                    address = address,
-//                    watched = customerDto.watched?.let {},
-//                    favorites = customerDto.favourites?.map { addToFavourites(customerDto.id, it) }
-//                )
-//            )
-//
-//        //todo unsure if this is needed
-//        customerDto.watched?.map { movieService.saveOne(it) }
-//        customerDto.favourites?.map { movieService.saveOne(it) }
-//        //todo unsure if this will work in the same transaction (might need to explicitly check for bad entries in favs and watched)
-//        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
-//        return customerEntity.apply {
-//            this.address = addressRepository.findAddressForCustomerId(this.id).first()
-//        }.toDto()
-//    }
 
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
-//    @Transactional
+    @Transactional
     override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto {
-        println("method addtowatched started")
         val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
