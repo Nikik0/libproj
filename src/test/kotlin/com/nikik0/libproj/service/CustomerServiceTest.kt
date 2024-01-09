@@ -2,6 +2,7 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.entities.*
+import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
@@ -12,12 +13,14 @@ import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(MockKExtension::class)
@@ -185,6 +188,10 @@ class CustomerServiceTest {
         coEvery { manyToManyRepository.customerAddressInsert(customerEntity2.id, address2.id) } returns Unit
         coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
         coEvery { addressRepository.findAddressForCustomerId(customerEntity2.id) } returns flowOf(address2)
+        coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns emptyFlow()
+        coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity2.id) } returns emptyFlow()
+        coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns emptyFlow()
+        coEvery { movieService.findFavMoviesForCustomerId(customerEntity2.id) } returns emptyFlow()
 
         // when
         val result1 = customerService.saveCustomer(customerDto1)
@@ -250,7 +257,7 @@ class CustomerServiceTest {
 
     // todo this will throw exception later
     @Test
-    fun `addToFavourites returns null with movie in favs if the movie was not in watched`() = runTest {
+    fun `addToFavourites throws MovieNotInWatchedResponseException with movie in favs if the movie was not in watched`() = runTest {
         // given
         coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
@@ -264,10 +271,8 @@ class CustomerServiceTest {
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf()
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns false
 
-        // when
-        val result = customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto())
-
         // then
-        assertEquals(null, result)
+        assertThrows<MovieNotInWatchedResponseException> { customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto()) }
+
     }
 }
