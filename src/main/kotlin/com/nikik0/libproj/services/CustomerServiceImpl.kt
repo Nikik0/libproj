@@ -3,11 +3,9 @@ package com.nikik0.libproj.services
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToAddress
-import com.nikik0.libproj.dtos.mapToEntity
 import com.nikik0.libproj.entities.CustomerEntity
-import com.nikik0.libproj.entities.mapToDto
 import com.nikik0.libproj.entities.toDto
-import com.nikik0.libproj.entities.toDtoYeager
+import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
 import com.nikik0.libproj.repositories.*
@@ -34,10 +32,16 @@ class CustomerServiceImpl(
             address = addressRepository.findAddressForCustomerId(this.id).toList().first()
             watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }?.toDtoYeager()
-    //todo dtoYeager is useless and should be removed
+        }?.toDto()
+            ?: throw NotFoundEntityResponseException(
+                HttpStatus.NOT_FOUND,
+                "Customer with id $id wasn't found"
+            )
 
-    override suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
+    override suspend fun getAllCustomers() = customerRepository.findAll().map {
+        it.address = addressRepository.findAddressForCustomerId(it.id).first()
+        it.toDto()
+    }
 
 //working
     /*
@@ -83,7 +87,6 @@ class CustomerServiceImpl(
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
         val address = addressRepository.save(customerDto.mapToAddress())
-        // todo autoincrement works for customer even if exception occurred
         val customerEntity = customerRepository.findById(customerDto.id)?.let {
             customerRepository.save(
                 CustomerEntity(
@@ -93,8 +96,6 @@ class CustomerServiceImpl(
                     address = address,
                     watched = it.watched,
                     favorites = it.favorites
-                    //todo save same movies to watched should be checked, multiple same movies are trash
-                    //todo need to check if this actually saves watched and stuff
                 )
             )
         } ?: let {
@@ -109,14 +110,14 @@ class CustomerServiceImpl(
                 )
             )
         }
+        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id) //todo this duplicates address
         customerDto.watched?.forEach { addToWatched(customerEntity.id, it) }
         customerDto.favourites?.forEach { addToFavourites(customerEntity.id, it) }
-        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
         return customerEntity.apply {
             this.address = addressRepository.findAddressForCustomerId(this.id).first()
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }.toDtoYeager()
+        }.toDto()
     }
 
     override suspend fun deleteCustomer(customer: CustomerDto) =
@@ -127,14 +128,7 @@ class CustomerServiceImpl(
         val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
-            manyToManyRepository.customerWatchedMovieInsert(customerEntity.id, movieEntity.id)
-            this.getCustomer(customerEntity.id) ?: throw NotFoundEntityResponseException(
-                HttpStatusCode.valueOf(404),
-                ProblemDetail.forStatus(404),
-                NotFoundException(),
-                null,
-                null
-            )//null //throw NotFoundEntityException()
+            checkAndInsertToWatched(customerEntity.id, movieEntity.id)
         } else {
             throw NotFoundEntityResponseException(
                 HttpStatus.NOT_FOUND,
@@ -142,22 +136,27 @@ class CustomerServiceImpl(
             )
         }
     }
+
+    private suspend fun checkAndInsertToWatched(customerId: Long, movieId: Long): CustomerDto {
+        if (manyToManyRepository.checkIfCustomerWatchedMovie(
+                customerId,
+                movieId
+            )
+        ) throw AlreadyPresentResponseException(
+            HttpStatus.CONFLICT,
+            "Watched movie with id $movieId is already present in watched list for user $customerId"
+        )
+        manyToManyRepository.customerWatchedMovieInsert(customerId, movieId)
+        return getCustomer(customerId)
+    }
+
 
     @Transactional
     override suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto? {
         val movieEntity = movieService.getOneLazy(movieDto.id)
         val customerEntity = customerRepository.findById(customerId)
         return if (customerEntity != null && movieEntity != null) {
-            if (!manyToManyRepository.checkIfCustomerWatchedMovie(
-                    customerId,
-                    movieEntity.id
-                )
-            ) throw MovieNotInWatchedResponseException(
-                HttpStatus.NOT_ACCEPTABLE,
-                "Movie with id ${movieEntity.id} wasn't added to watched, unable to add it to favourites"
-            )
-            manyToManyRepository.customerFavouriteMovieInsert(customerEntity.id, movieEntity.id)
-            this.getCustomer(customerEntity.id)
+            checkAndInsertToFav(customerEntity.id, movieEntity.id)
         } else {
             throw NotFoundEntityResponseException(
                 HttpStatus.NOT_FOUND,
@@ -166,5 +165,24 @@ class CustomerServiceImpl(
         }
     }
 
-
+    private suspend fun checkAndInsertToFav(customerId: Long, movieId: Long): CustomerDto {
+        if (!manyToManyRepository.checkIfCustomerWatchedMovie(
+                customerId,
+                movieId
+            )
+        ) throw MovieNotInWatchedResponseException(
+            HttpStatus.NOT_ACCEPTABLE,
+            "Movie with id $movieId wasn't added to watched, unable to add it to favourites"
+        )
+        if (manyToManyRepository.checkIfCustomerFavMovie(
+                customerId,
+                movieId
+            )
+        ) throw AlreadyPresentResponseException( //todo might want to ignore these if saving already present customer with watched list of old and new movies
+            HttpStatus.CONFLICT,
+            "Favourite movie with id $movieId is already present in favourites list for user $customerId"
+        )
+        manyToManyRepository.customerFavouriteMovieInsert(customerId, movieId)
+        return getCustomer(customerId)
+    }
 }
