@@ -156,7 +156,7 @@ class CustomerServiceTest {
         assertEquals(customerEntity1.apply {
             watched = listOf(movieEntity1, movieEntity2)
             favorites = listOf(movieEntity1)
-        }.toDtoYeager(), result1)
+        }.toDto(), result1)
         assertEquals(customerDto2, result2)
     }
 
@@ -164,6 +164,8 @@ class CustomerServiceTest {
     fun `getAll returns flow with correct dtos`() = runTest {
         // given
         coEvery { customerRepository.findAll() } returns flowOf(customerEntity1, customerEntity2)
+        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
+        coEvery { addressRepository.findAddressForCustomerId(customerEntity2.id) } returns flowOf(address2)
 
         // when
         val result = customerService.getAllCustomers().toList()
@@ -227,7 +229,7 @@ class CustomerServiceTest {
         assertEquals(customerEntity1.apply {
             watched = listOf(movieEntity1)
             favorites = listOf()
-        }.toDtoYeager(), result)
+        }.toDto(), result)
     }
 
     @Test
@@ -252,7 +254,7 @@ class CustomerServiceTest {
         assertEquals(customerEntity1.apply {
             watched = listOf(movieEntity1)
             favorites = listOf(movieEntity1)
-        }.toDtoYeager(), result)
+        }.toDto(), result)
     }
 
     // todo this will throw exception later

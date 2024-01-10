@@ -3,11 +3,8 @@ package com.nikik0.libproj.services
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToAddress
-import com.nikik0.libproj.dtos.mapToEntity
 import com.nikik0.libproj.entities.CustomerEntity
-import com.nikik0.libproj.entities.mapToDto
 import com.nikik0.libproj.entities.toDto
-import com.nikik0.libproj.entities.toDtoYeager
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
 import com.nikik0.libproj.repositories.*
@@ -34,10 +31,12 @@ class CustomerServiceImpl(
             address = addressRepository.findAddressForCustomerId(this.id).toList().first()
             watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }?.toDtoYeager()
-    //todo dtoYeager is useless and should be removed
+        }?.toDto()
 
-    override suspend fun getAllCustomers() = customerRepository.findAll().map { it.toDto() }
+    override suspend fun getAllCustomers() = customerRepository.findAll().map {
+        it.address = addressRepository.findAddressForCustomerId(it.id).first()
+        it.toDto()
+    }
 
 //working
     /*
@@ -116,7 +115,7 @@ class CustomerServiceImpl(
             this.address = addressRepository.findAddressForCustomerId(this.id).first()
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }.toDtoYeager()
+        }.toDto()
     }
 
     override suspend fun deleteCustomer(customer: CustomerDto) =
