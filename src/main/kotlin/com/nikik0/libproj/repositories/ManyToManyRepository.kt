@@ -111,6 +111,10 @@ class ManyToManyRepository (
         client.sql("SELECT 1 from customer_watched_movies where customer_id = $customerId and watched_movie_id = $movieId")
             .fetch().awaitSingleOrNull() != null
 
+    suspend fun checkIfCustomerFavMovie(customerId: Long, movieId: Long) =
+        client.sql("SELECT 1 from customer_favourite_movies where customer_id = $customerId and favourite_movie_id = $movieId")
+            .fetch().awaitSingleOrNull() != null
+
     suspend fun movieActorInsert(movieId: Long, ActorId: Long){
         client.sql("INSERT into movie_actor values ($1, $2)")
             .bind(0, movieId)
