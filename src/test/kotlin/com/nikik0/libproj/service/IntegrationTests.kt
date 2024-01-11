@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
@@ -431,7 +432,7 @@ class IntegrationTests(
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieSavedFirstDummy!!).exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
-        val customerUpdated = webClient.post().uri("/api/v1/customer/${customer!!.id}/favourites/add")
+        val customerUpdated = webClient.post().uri("/api/v1/customer/${customer.id}/favourites/add")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieSavedFirstDummy!!).exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -439,4 +440,51 @@ class IntegrationTests(
         assertThat(customerUpdated.favourites!![0].id).isEqualTo(movie!!.id)
     }
 
+    @Test
+    fun `add to favs returns ResponseException if movie is not present in watched`(){
+        val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        val resultStatus = webClient.post().uri("/api/v1/customer/${customer?.id}/favourites/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<Any>().status
+
+        assertThat(resultStatus).isEqualTo(HttpStatus.NOT_ACCEPTABLE)
+    }
+
+    @Test
+    fun `add to watched returns ResponseException if movie is already present in watched`(){
+        val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        webClient.post().uri("/api/v1/customer/${customer!!.id}/watched/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        val resultStatus = webClient.post().uri("/api/v1/customer/${customer!!.id}/watched/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<Any>().status
+
+        assertThat(resultStatus).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `add to favs returns ResponseException if movie is already present in favs`(){
+        val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        webClient.post().uri("/api/v1/customer/${customer!!.id}/watched/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        webClient.post().uri("/api/v1/customer/${customer!!.id}/favourites/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<CustomerDto>().responseBody.blockLast()
+        val resultStatus = webClient.post().uri("/api/v1/customer/${customer!!.id}/favourites/add")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieSavedFirstDummy!!).exchange()
+            .returnResult<Any>().status
+
+        assertThat(resultStatus).isEqualTo(HttpStatus.CONFLICT)
+    }
 }
