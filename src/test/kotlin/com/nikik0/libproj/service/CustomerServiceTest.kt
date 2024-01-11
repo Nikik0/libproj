@@ -2,16 +2,19 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.entities.*
+import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
 import com.nikik0.libproj.services.CustomerServiceImpl
 import com.nikik0.libproj.services.MovieService
+import com.nikik0.libproj.services.MovieServiceImpl
 import io.mockk.coEvery
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
+import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import org.springframework.http.HttpStatus
 
 @ExtendWith(MockKExtension::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -221,6 +225,7 @@ class CustomerServiceTest {
         coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf()
+        coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns false
 
         // when
         val result = customerService.addToWatched(customerEntity1.id, movieEntity1.mapToDto())
@@ -230,6 +235,26 @@ class CustomerServiceTest {
             watched = listOf(movieEntity1)
             favorites = listOf()
         }.toDto(), result)
+    }
+
+    @Test
+    fun `addToWatched throws AlreadyPresentResponseException when movie is already present in watched`() = runTest {
+        // given
+        coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
+        coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
+            watched = listOf(movieEntity1)
+        }
+        coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
+        coEvery { addressRepository.save(address1) } returns address1
+        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
+        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
+        coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
+        coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
+        coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
+
+        // then
+        assertThrows<AlreadyPresentResponseException> { customerService.addToWatched(customerEntity1.id, movieEntity1.mapToDto()) }
+
     }
 
     @Test
@@ -246,6 +271,7 @@ class CustomerServiceTest {
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
+        coEvery { manyToManyRepository.checkIfCustomerFavMovie(customerEntity1.id, movieEntity1.id) } returns false
 
         // when
         val result = customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto())
@@ -257,7 +283,29 @@ class CustomerServiceTest {
         }.toDto(), result)
     }
 
-    // todo this will throw exception later
+    //todo tests for adding multiple similar movies to watched and fav lists
+
+    @Test
+    fun `addToFavourites throws AlreadyPresentResponseException when movie is already present in favs`() = runTest {
+        // given
+        coEvery { movieService.getOneLazy(movieEntity1.id) } returns movieEntity1
+        coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
+            watched = listOf(movieEntity1)
+        }
+        coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
+        coEvery { addressRepository.save(address1) } returns address1
+        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
+        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
+        coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
+        coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
+        coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
+        coEvery { manyToManyRepository.checkIfCustomerFavMovie(customerEntity1.id, movieEntity1.id) } returns true
+
+        // then
+        assertThrows<AlreadyPresentResponseException> { customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto()) }
+
+    }
+
     @Test
     fun `addToFavourites throws MovieNotInWatchedResponseException with movie in favs if the movie was not in watched`() = runTest {
         // given
