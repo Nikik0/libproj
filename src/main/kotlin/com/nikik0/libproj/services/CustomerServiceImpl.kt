@@ -58,8 +58,6 @@ class CustomerServiceImpl(
                     address = address,
                     watched = it.watched,
                     favorites = it.favorites
-                    //todo save same movies to watched should be checked, multiple same movies are trash
-                    //todo need to check if this actually saves watched and stuff
                 )
             )
         } ?: let {
