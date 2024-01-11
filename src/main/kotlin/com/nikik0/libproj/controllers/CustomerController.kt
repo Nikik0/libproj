@@ -39,9 +39,6 @@ class CustomerController (
         customerService.addToWatched(id, movieDto)?.let { ResponseEntity.ok(it) }
                 ?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
-    //todo refactor customer to include yeager init for dto that includes watched and fav lists
-    //todo add complicated saving for watched and favs in db
-
     @PostMapping("/{id}/favourites/add")
     suspend fun addToFavList(@PathVariable id: Long, @RequestBody movieDto: MovieDto) =
         customerService.addToFavourites(id, movieDto)?.let { ResponseEntity.ok(it) }

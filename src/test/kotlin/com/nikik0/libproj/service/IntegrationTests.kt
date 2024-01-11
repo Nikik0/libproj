@@ -99,6 +99,122 @@ class IntegrationTests(
                 }
     """.trimIndent()
 
+    private val customerUnsavedDummyWithMovies: String = """
+                {
+                    "name": "Third name",
+                    "surname": "Third Surname",
+                    "country": "Third country",
+                    "state": "Third state",
+                    "city": "Third city",
+                    "district": "Third district",
+                    "street": "Third street",
+                    "building": 1,
+                    "buildingLiteral": "Third literal",
+                    "apartmentNumber": 23,
+                    "additionalInfo": "Third additional info",
+                    "watched": [
+                        {
+                            "id": 1,
+                            "name": "First Test Movie",
+                            "producer": "First Test Producer",
+                            "actors": [
+                                {
+                                    "name": "First Actor name",
+                                    "surname": "First Actor surname",
+                                    "age": 20
+                                },
+                                {
+                                    "name": "Second Actor name",
+                                    "surname": "Second Actor surname",
+                                    "age": 30
+                                }
+                            ],
+                            "tags": [
+                                {
+                                    "name": "Horror"
+                                },
+                                {
+                                    "name": "Action"
+                                }
+                            ],
+                            "studio": {
+                                "name": "First Test Studio",
+                                "employees": 2000,
+                                "owner": "First Studio Owner"
+                            },
+                            "budget": 2000000,
+                            "movieUrl": "someurl.com/url"
+                        },
+                        {
+                            "id": 2,
+                            "name": "Second Test Movie",
+                            "producer": "Second Test Producer",
+                            "actors": [
+                                {
+                                    "name": "Third Actor name",
+                                    "surname": "Third Actor surname",
+                                    "age": 20
+                                },
+                                {
+                                    "name": "Forth Actor name",
+                                    "surname": "Forth Actor surname",
+                                    "age": 30
+                                }
+                            ],
+                            "tags": [
+                                {
+                                    "name": "Mystic"
+                                },
+                                {
+                                    "name": "Action"
+                                }
+                            ],
+                            "studio": {
+                                "name": "Second Test Studio",
+                                "employees": 2000,
+                                "owner": "Second Studio Owner"
+                            },
+                            "budget": 2000000,
+                            "movieUrl": "someurl.com/url2"
+                        }
+                    ],
+                    "favourites":[
+                        {
+                            "id": 1,
+                            "name": "First Test Movie",
+                            "producer": "First Test Producer",
+                            "actors": [
+                                {
+                                    "name": "First Actor name",
+                                    "surname": "First Actor surname",
+                                    "age": 20
+                                },
+                                {
+                                    "name": "Second Actor name",
+                                    "surname": "Second Actor surname",
+                                    "age": 30
+                                }
+                            ],
+                            "tags": [
+                                {
+                                    "name": "Horror"
+                                },
+                                {
+                                    "name": "Action"
+                                }
+                            ],
+                            "studio": {
+                                "name": "First Test Studio",
+                                "employees": 2000,
+                                "owner": "First Studio Owner"
+                            },
+                            "budget": 2000000,
+                            "movieUrl": "someurl.com/url"
+                        }
+                    ]
+                }
+    """.trimIndent()
+
     private var movieSavedFirstDummy: MovieDto? = null
 
     private var movieSavedSecondDummy: MovieDto? = null
@@ -170,6 +286,7 @@ class IntegrationTests(
                 "movieUrl": "someurl.com/url2"
             }
         """.trimIndent()
+
 
 
     private val tables = listOf(
@@ -486,5 +603,44 @@ class IntegrationTests(
             .returnResult<Any>().status
 
         assertThat(resultStatus).isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `save customer should save new customer with multiple movies in favs and watched`(){
+        webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        val customerDto = webClient.post().uri("/api/v1/customer/save")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(customerUnsavedDummyWithMovies).exchange().returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerDto?.watched).isNotNull.hasSize(2)
+        assertThat(customerDto?.favourites).isNotNull.hasSize(1)
+    }
+
+    @Test
+    fun `save customer should save existing customer with multiple movies in favs and watched`(){
+        val movieSecondDto = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
+        val customerToSave = CustomerDto(
+            id = customerSavedFirstDummy!!.id,
+            name = customerSavedFirstDummy!!.name + " Changed",
+            surname = customerSavedFirstDummy!!.surname,
+            country = customerSavedFirstDummy!!.country,
+            state = customerSavedFirstDummy!!.state,
+            city = customerSavedFirstDummy!!.city,
+            district = customerSavedFirstDummy!!.district,
+            street = customerSavedFirstDummy!!.street,
+            building = customerSavedFirstDummy!!.building,
+            buildingLiteral = customerSavedFirstDummy!!.buildingLiteral,
+            apartmentNumber = customerSavedFirstDummy!!.apartmentNumber,
+            additionalInfo = customerSavedFirstDummy!!.additionalInfo,
+            watched = listOf(movieSavedFirstDummy!!, movieSecondDto!!),
+            favourites = listOf(movieSavedFirstDummy!!)
+        )
+        val customerDto = webClient.post().uri("/api/v1/customer/save")
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
+            .bodyValue(customerToSave).exchange().returnResult<CustomerDto>().responseBody.blockLast()
+        assertThat(customerDto!!.name).isEqualTo(customerSavedFirstDummy!!.name + " Changed")
+        assertThat(customerDto.watched).isNotNull.hasSize(2)
+        assertThat(customerDto.favourites).isNotNull.hasSize(1)
     }
 }

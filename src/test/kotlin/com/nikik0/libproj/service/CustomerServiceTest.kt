@@ -208,12 +208,6 @@ class CustomerServiceTest {
         assertEquals(customerDto2, result2)
     }
 
-    //todo learn what to test in unit returning methods
-    @Test
-    fun deleteCustomer() = runTest {
-
-    }
-
     @Test
     fun `addToWatched returns customer dto with movie added to watched`() = runTest {
         // given
