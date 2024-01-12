@@ -8,11 +8,18 @@ spring:
     url: r2dbc:pool:postgres://localhost:5432/movies-db
     username: dev
     password: dev123
+
 #  flyway:
 #    url: jdbc:postgresql://localhost:5432/fin_api_test_db
 #    locations: classpath:db/migration
 #    user: ${spring.r2dbc.username}
 #    password: ${spring.r2dbc.password}
+
+springdoc:
+  swagger-ui:
+    path: /v3/swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
 
 logging:
   level:
