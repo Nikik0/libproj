@@ -5,6 +5,12 @@ import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.MovieEntity
 import com.nikik0.libproj.services.CustomerService
 import com.nikik0.libproj.services.CustomerServiceImpl
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -21,8 +27,24 @@ import org.springframework.web.bind.annotation.RestController
 class CustomerController (
     private val customerService: CustomerService
         ){
+    @Operation(summary = "Get single customer by its id")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", description = "Found corresponding customer", content = [
+                    Content(mediaType = "application/json", schema = Schema(implementation = CustomerDto::class))
+                ]
+            ),
+            ApiResponse(
+                responseCode = "404", description = "Corresponding customer not found", content = [
+                    Content()
+                ]
+            )
+        ]
+    )
     @GetMapping("/get/{id}")
-    suspend fun getCustomer(@PathVariable id: Long) = customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    suspend fun getCustomer(@Parameter(description = "Id of the customer to be searched") @PathVariable id: Long) =
+        customerService.getCustomer(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
 
     @PostMapping("/save")
     suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
