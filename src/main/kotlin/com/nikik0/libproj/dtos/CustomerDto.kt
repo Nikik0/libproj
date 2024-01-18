@@ -2,6 +2,8 @@ package com.nikik0.libproj.dtos
 
 import com.nikik0.libproj.entities.AddressEntity
 import com.nikik0.libproj.entities.CustomerEntity
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotEmpty
 
 fun CustomerDto.mapToAddress() =
     AddressEntity(
@@ -40,7 +42,9 @@ fun CustomerDto.mapToCustomerEntityAndAddress(): Pair<CustomerEntity, AddressEnt
 
 data class CustomerDto(
     val id: Long,
+    @field:NotBlank(message = "{validation.customer.field.name.blank}")
     val name: String,
+    @field:NotBlank(message = "{validation.customer.field.surname.blank}")
     val surname:String,
     val country: String?,
     val state: String?,

@@ -12,9 +12,11 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import jakarta.validation.Valid
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -63,8 +65,8 @@ class CustomerController (
         ]
     )
     @PostMapping("/save")
-    suspend fun saveCustomer(@RequestBody customerDto: CustomerDto) =
-        customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.BAD_REQUEST)
+    suspend fun saveCustomer(@Valid @RequestBody customerDto: CustomerDto) =
+        customerService.saveCustomer(customerDto)?.let { ResponseEntity.ok(it) } //?: ResponseEntity(HttpStatus.BAD_REQUEST)
 
     @Operation(summary = "Delete customer")
     @ApiResponses(

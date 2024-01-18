@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -79,7 +80,7 @@ class MovieController (
         ]
     )
     @PostMapping("/save")
-    suspend fun saveOne(@RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
+    suspend fun saveOne(@Validated @RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
 
     @Operation(summary = "Find all movies by tag (case insensitive)")
     @ApiResponses(
