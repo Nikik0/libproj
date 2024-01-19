@@ -1,10 +1,13 @@
 package com.nikik0.libproj.exceptions
 
+import org.springframework.boot.context.properties.bind.validation.ValidationErrors
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.FieldError
+import org.springframework.web.ErrorResponse
 import org.springframework.web.ErrorResponseException
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.support.WebExchangeBindException
@@ -22,12 +25,9 @@ class ApiExceptionHandler: ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Any>> {
-        val error = ex.detailMessageArguments.asList().drop(1)[0] as List<*>
-        println(ex.detailMessageArguments.asList().drop(1))
-        val pb = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "error in arg + ${error}")
-        println("handleWebExchangeBindException happened  ${ex.message}")
-        return createResponseEntity(pb, headers, status, exchange)
-//        return super.handleWebExchangeBindException(ex, headers, status, exchange)
+        val smth =
+            ex.fieldErrors.joinToString { "${it.field} has error ${it.defaultMessage} invalid value is ${it.rejectedValue}" }
+        return createResponseEntity(smth, headers, status, exchange)
     }
 
     @Override
