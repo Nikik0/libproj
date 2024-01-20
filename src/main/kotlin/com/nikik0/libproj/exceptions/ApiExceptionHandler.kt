@@ -25,31 +25,17 @@ class ApiExceptionHandler: ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Any>> {
-        val smth =
-            ex.fieldErrors.joinToString { "${it.field} has error ${it.defaultMessage} invalid value is ${it.rejectedValue}" }
-        return createResponseEntity(smth, headers, status, exchange)
-    }
-
-    @Override
-    override fun handleMethodNotAllowedException(
-        ex: MethodNotAllowedException,
-        headers: HttpHeaders,
-        status: HttpStatusCode,
-        exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Any>> {
-        println("handleMethodNotAllowedException")
-        return super.handleMethodNotAllowedException(ex, headers, status, exchange)
-    }
-
-    @Override
-    override fun handleErrorResponseException(
-        ex: ErrorResponseException,
-        headers: HttpHeaders,
-        status: HttpStatusCode,
-        exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Any>> {
-        println("handleErrorResponseException")
-        return super.handleErrorResponseException(ex, headers, status, exchange)
+        val errors =
+            ex.fieldErrors.joinToString(
+                separator = ", ",
+                limit = 100
+            ) { "${it.field} has error ${it.defaultMessage}, invalid value is ${it.rejectedValue} " }
+        return createResponseEntity(
+            ValidationErrorBody("Error validating supplied entity", errors),
+            headers,
+            status,
+            exchange
+        )
     }
 
     @Override
