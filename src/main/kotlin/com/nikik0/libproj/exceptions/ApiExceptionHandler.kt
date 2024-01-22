@@ -24,19 +24,16 @@ class ApiExceptionHandler: ResponseEntityExceptionHandler() {
         headers: HttpHeaders,
         status: HttpStatusCode,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Any>> {
-        val errors =
-            ex.fieldErrors.joinToString(
-                separator = ", ",
-                limit = 100
-            ) { "${it.field} has error ${it.defaultMessage}, invalid value is ${it.rejectedValue} " }
-        return createResponseEntity(
-            ValidationErrorBody("Error validating supplied entity", errors),
-            headers,
-            status,
-            exchange
-        )
-    }
+    ): Mono<ResponseEntity<Any>> = createResponseEntity(
+        ValidationErrorBody(
+            "Error validating supplied entity",
+            ex.fieldErrors.map { it.defaultMessage }
+        ),
+        headers,
+        status,
+        exchange
+    )
+
 
     @Override
     override fun createResponseEntity(
@@ -45,9 +42,7 @@ class ApiExceptionHandler: ResponseEntityExceptionHandler() {
         status: HttpStatusCode,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Any>> {
-//        val problemDetail = body as ProblemDetail
-        // todo should somehow catch the exception and pass it to user
-        logger.error("error occurred $body")
+        logger.error("Error occurred $body")
         return super.createResponseEntity(body, headers, status, exchange)
     }
 }
