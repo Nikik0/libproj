@@ -1,5 +1,13 @@
 version: "3.9"
 services:
+  testcontainers_bridge_to_docker_daemon_on_host:
+    ports:
+      - "127.0.0.1:2375:2375"
+    volumes:
+      - //var/run/docker.sock://var/run/docker.sock
+    image: alpine/socat
+    command: tcp-listen:2375,reuseaddr,fork unix-connect:/var/run/docker.sock
+
   library_instance:
     container_name: lib_container
     hostname: service
