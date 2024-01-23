@@ -1,13 +1,22 @@
-server:
+envs:
   port: 8083
-
-spring:
-  datasource:
-    password: dev123
-  r2dbc:
-    url: r2dbc:pool:postgres://localhost:5432/movies-db
+  debug:
+    query: DEBUG
+    param: DEBUG
+  database:
+    name: movies-db
     username: dev
     password: dev123
+    url: r2dbc:pool:postgres://localhost:5432/${envs.database.name}
+
+server:
+  port: ${envs.port}
+
+spring:
+  r2dbc:
+    url: ${envs.database.url}
+    username: ${envs.database.username}
+    password: ${envs.database.password}
 
 #  flyway:
 #    url: jdbc:postgresql://localhost:5432/fin_api_test_db
@@ -23,8 +32,8 @@ springdoc:
 
 logging:
   level:
-    io.r2dbc.postgresql.QUERY: DEBUG
-    io.r2dbc.postgresql.PARAM: DEBUG
+    io.r2dbc.postgresql.QUERY: ${envs.debug.query}
+    io.r2dbc.postgresql.PARAM: ${envs.debug.param}
 
 settings:
   batchSize: 1000
