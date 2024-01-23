@@ -1,5 +1,6 @@
 version: "3.9"
 services:
+  #needed to allow access to host's docker daemon while integration testing in multistage build
   testcontainers_bridge_to_docker_daemon_on_host:
     ports:
       - "127.0.0.1:2375:2375"
@@ -14,19 +15,25 @@ services:
     build:
       context: ../../../
       dockerfile: src/main/docker/lib-service/dockerfile
-    volumes:
-      - ./reports:/workspace/app
+    env_file:
+      - docker-compose.env
+    environment:
+      envs.port: ${SERVER_PORT}
+      envs.debug.query: ${QUERY_LOGGING}
+      envs.debug.param: ${QUERY_PARAM_LOGGING}
+      envs.database.name: ${DB_NAME}
+      envs.database.username: ${DB_USERNAME}
+      envs.database.password: ${DB_PASSWORD}
+      ###todo somehow cant move this to env variable, need to investigate
+      spring.r2dbc.url: r2dbc:pool:postgres://postgres_db/movies-db
     ports:
       - "8083:8083"
     restart: always
     depends_on:
       - postgres_db
-    networks:
-      - postgres
+      - testcontainers_bridge_to_docker_daemon_on_host
 
   postgres_db:
-    container_name: db_container
-    hostname: db
     image: postgres:14.8-alpine3.18
     command:
       - "postgres"
@@ -58,16 +65,18 @@ services:
       - "pg_stat_statements.max=10000"
       - "-c"
       - "pg_stat_statements.track=all"
+    env_file:
+      - docker-compose.env
     environment:
-      POSTGRES_DB: "movies-db"
-      POSTGRES_USER: "dev"
-      POSTGRES_PASSWORD: "dev123"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
       - ./docker-db/init:/docker-entrypoint-initdb.d
       - ./docker-db/data/db-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+#    ports:
+#      - "5432:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U dev -d movies-db" ]
       interval: 10s
@@ -80,8 +89,6 @@ services:
         limits:
           cpus: '1'
           memory: 4G
-    networks:
-      - postgres-admin
 
   pgadmin:
     hostname: admin_console
@@ -103,12 +110,3 @@ services:
         limits:
           cpus: '0.5'
           memory: 1G
-    networks:
-      - postgres
-      - postgres-admin
-
-networks:
-  postgres-admin:
-    driver: bridge
-  postgres:
-    driver: bridge

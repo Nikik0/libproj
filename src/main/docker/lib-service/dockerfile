@@ -1,6 +1,6 @@
+FROM eclipse-temurin:17-jdk-alpine AS build
 ENV DOCKER_HOST=tcp://host.docker.internal:2375
 ENV TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
-FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /workspace/app
 COPY . /workspace/app
 RUN echo $(ls -1 /workspace/app)
