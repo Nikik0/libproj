@@ -1,0 +1,20 @@
+# Dockerfile focused on development environment use case
+FROM eclipse-temurin:17-jdk-alpine
+
+# Prep image with gradle cache to use as mount point for host cache when container runs
+RUN mkdir /root/.gradle
+
+# We can mount the host code repo here if we to update with every run, but the copy below makes mounting unnecessary
+# if we only want the repo state at build time.
+RUN mkdir /app
+
+WORKDIR /app
+COPY . .
+RUN target=/root/.gradle ./gradlew clean build
+RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*-1.0.0.jar)
+EXPOSE 8083
+#RUN echo $(ls -1 /workspace/app)
+ENTRYPOINT ["java", "-jar", "/workspace/app/app.jar"]
+# Running with gradle in dev environment to enable devtools features (debugging, auto reload)
+# This entrypoint is overridden by the Jenkins Pipeline plugin, so we won't bootRun there
+#CMD ["./gradlew", "bootRun"]

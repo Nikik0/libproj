@@ -1,9 +1,12 @@
+ENV DOCKER_HOST=tcp://host.docker.internal:2375
+ENV TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
 FROM eclipse-temurin:17-jdk-alpine AS build
 WORKDIR /workspace/app
-
 COPY . /workspace/app
 RUN echo $(ls -1 /workspace/app)
-RUN target=/root/.gradle ./gradlew clean build --scan
+RUN target=/root/.gradle ./gradlew clean build --no-daemon --scan
+RUN echo $(ls -1 /workspace/app)
+RUN echo $(ls -1 build/dependency)
 RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*-1.0.0.jar)
 
 FROM eclipse-temurin:17-jre-alpine
