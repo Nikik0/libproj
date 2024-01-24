@@ -14,7 +14,7 @@ services:
     hostname: service
     build:
       context: ../../../
-      dockerfile: lib-service/dockerfile-multistage
+      dockerfile: src/main/docker/lib-service/dockerfile-multistage
     env_file:
       - compose.env
     environment:
@@ -24,8 +24,11 @@ services:
       envs.database.name: ${DB_NAME}
       envs.database.username: ${DB_USERNAME}
       envs.database.password: ${DB_PASSWORD}
+      SPRINGPROFILES: "actuator,default"
       ###todo somehow cant move this to env variable, need to investigate
       spring.r2dbc.url: r2dbc:pool:postgres://postgres_db/movies-db
+      spring.r2dbc.name: dev
+      spring.r2dbc.password: dev123
     ports:
       - "8083:8083"
     restart: always

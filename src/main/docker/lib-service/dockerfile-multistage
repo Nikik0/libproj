@@ -3,15 +3,13 @@ ENV DOCKER_HOST=tcp://host.docker.internal:2375
 ENV TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal
 WORKDIR /workspace/app
 COPY . /workspace/app
-RUN echo $(ls -1 /workspace/app)
 RUN target=/root/.gradle ./gradlew clean build --no-daemon --scan
-RUN echo $(ls -1 /workspace/app)
-RUN echo $(ls -1 build/dependency)
 RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*-1.0.0.jar)
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /workspace/app
 COPY --from=build /workspace/app/build/libs/*1.0.0.jar /workspace/app/app.jar
 EXPOSE 8083
-#RUN echo $(ls -1 /workspace/app)
-ENTRYPOINT ["java", "-jar", "/workspace/app/app.jar"]
+ENV SPRINGPROFILES=""
+#
+ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRINGPROFILES}", "-jar", "/workspace/app/app.jar"]
