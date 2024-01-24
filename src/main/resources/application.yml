@@ -26,9 +26,8 @@ management:
     metrics:
       export:
         enabled: true
-      distribution:
-        percentiles-histogram:
-          "[http.server.requests]": true
+
+
 #  endpoints:
 #    web:
 #      exposure:

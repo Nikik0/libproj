@@ -113,3 +113,33 @@ services:
         limits:
           cpus: '0.5'
           memory: 1G
+
+  grafana:
+    build: './monitoring/grafana'
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+#    networks:
+#      monitoring:
+#        aliases:
+#          - grafana
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+#    networks:
+#      monitoring:
+#        aliases:
+#          - prometheus
+#  networks:
+#    monitoring:
