@@ -7,7 +7,43 @@ envs:
     name: movies-db
     username: dev
     password: dev123
-    url: r2dbc:pool:postgres://localhost:5432/${envs.database.name}
+    url: r2dbc:pool:postgres://localhost:5432/movies-db
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health,prometheus,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,prometheus
+#  metrics:
+#    distribution:
+#      percentiles-histogram:
+#        "[http.server.requests]": true
+#  prometheus:
+#    metrics:
+#      export:
+#        enabled: true
+#      distribution:
+#        percentiles-histogram:
+#          "[http.server.requests]": true
+
 
 server:
   port: ${envs.port}
@@ -15,8 +51,14 @@ server:
 spring:
   r2dbc:
     url: ${envs.database.url}
-    username: ${envs.database.username}
-    password: ${envs.database.password}
+    username: dev
+    password: dev123
+
+#spring:
+#  r2dbc:
+#    url: ${envs.database.url}
+#    username: ${envs.database.username}
+#    password: ${envs.database.password}
 
 #  flyway:
 #    url: jdbc:postgresql://localhost:5432/fin_api_test_db
