@@ -26,6 +26,7 @@ services:
       envs.database.password: ${DB_PASSWORD}
       SPRINGPROFILES: "actuator,default"
       ###todo somehow cant move this to env variable, need to investigate
+      ###todo appears to not work at all
       spring.r2dbc.url: r2dbc:pool:postgres://postgres_db/movies-db
       spring.r2dbc.name: dev
       spring.r2dbc.password: dev123
@@ -68,18 +69,20 @@ services:
       - "pg_stat_statements.max=10000"
       - "-c"
       - "pg_stat_statements.track=all"
-    env_file:
-      - compose.env
+#    env_file:
+#      - compose.env
+    ###todo envs from file not working
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+#      POSTGRES_DB: ${DB_NAME}
+#      POSTGRES_USER: ${DB_USERNAME}
+#      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: movies-db
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
       - ./docker-db/init:/docker-entrypoint-initdb.d
       - ./docker-db/data/db-data:/var/lib/postgresql/data
-#    ports:
-#      - "5432:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U dev -d movies-db" ]
       interval: 10s
@@ -119,15 +122,17 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./grafana:/var/lib/grafana
+      - ./monitoring/grafana-data:/var/lib/grafana
+    env_file:
+      - compose.env
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
 
   prometheus:
     image: prom/prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./prometheus:/prometheus
+      - ./monitoring/prometheus-data:/prometheus
     extra_hosts:
       - "host.docker.internal:host-gateway"
