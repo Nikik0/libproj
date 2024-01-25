@@ -30,6 +30,10 @@ dependencies {
 	implementation("jakarta.validation:jakarta.validation-api:3.0.2")
 	implementation("org.springframework.boot:spring-boot-starter-actuator:3.2.0")
 	implementation("io.micrometer:micrometer-registry-prometheus:1.12.1")
+	implementation("net.logstash.logback:logstash-logback-encoder:7.4")
+	implementation("io.sentry:sentry-spring-boot-starter:7.2.0")
+	// https://mvnrepository.com/artifact/io.sentry/sentry-logback
+	testImplementation("io.sentry:sentry-logback:7.2.0")
 	runtimeOnly("org.postgresql:postgresql")
 	runtimeOnly("org.postgresql:r2dbc-postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
