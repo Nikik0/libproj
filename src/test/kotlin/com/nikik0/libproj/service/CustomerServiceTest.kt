@@ -1,6 +1,7 @@
 package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
+import com.nikik0.libproj.dtos.mapToAddress
 import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
@@ -277,8 +278,6 @@ class CustomerServiceTest {
         }.toDto(), result)
     }
 
-    //todo tests for adding multiple similar movies to watched and fav lists
-
     @Test
     fun `addToFavourites throws AlreadyPresentResponseException when movie is already present in favs`() = runTest {
         // given
@@ -297,7 +296,6 @@ class CustomerServiceTest {
 
         // then
         assertThrows<AlreadyPresentResponseException> { customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto()) }
-
     }
 
     @Test
@@ -317,6 +315,5 @@ class CustomerServiceTest {
 
         // then
         assertThrows<MovieNotInWatchedResponseException> { customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto()) }
-
     }
 }

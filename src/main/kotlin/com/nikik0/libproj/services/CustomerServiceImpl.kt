@@ -80,10 +80,9 @@ class CustomerServiceImpl(
     }
      */
 
-
-    // todo save with watched and favs is useless, should be reworked
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
+        println("started saving")
         val address = addressRepository.save(customerDto.mapToAddress())
         val customerEntity = customerRepository.findById(customerDto.id)?.let {
             customerRepository.save(
@@ -118,6 +117,7 @@ class CustomerServiceImpl(
         }.toDto()
     }
 
+    // todo check everywhere for cascade delete
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 
