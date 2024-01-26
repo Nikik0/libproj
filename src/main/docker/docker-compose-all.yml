@@ -145,9 +145,9 @@ services:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     init: true
     volumes:
-      - ./docker-elk-main/setup/entrypoint.sh:/entrypoint.sh:ro,Z
-      - ./docker-elk-main/setup/helpers.sh:/helpers.sh:ro,Z
-      - ./docker-elk-main/setup/roles:/roles:ro,Z
+      - ./docker-elk/setup/entrypoint.sh:/entrypoint.sh:ro,Z
+      - ./docker-elk/setup/helpers.sh:/helpers.sh:ro,Z
+      - ./docker-elk/setup/roles:/roles:ro,Z
       - setup:/state:Z
     environment:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
@@ -167,7 +167,7 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./docker-elk-main/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - ./docker-elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
       - elasticsearch:/usr/share/elasticsearch/data:Z
     ports:
       - 9200:9200
@@ -190,7 +190,7 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./docker-elk-main/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+      - ./docker-elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
       - 5601:5601
     environment:
@@ -205,8 +205,8 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./docker-elk-main/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
-      - ./docker-elk-main/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./docker-elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./docker-elk/logstash/pipeline:/usr/share/logstash/pipeline
       - /mnt/c/temp/logs:/usr/share/logstash/logs
     ports:
       - 5044:5044
