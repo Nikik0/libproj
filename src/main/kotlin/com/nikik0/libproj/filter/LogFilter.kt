@@ -1,22 +1,24 @@
 package com.nikik0.libproj.filter
 
+import org.apache.commons.logging.Log
+import org.apache.commons.logging.LogFactory
 import org.slf4j.MDC
 import org.springframework.stereotype.Component
-import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.web.server.WebFilter
+import org.springframework.web.server.WebFilterChain
+import reactor.core.publisher.Mono
 import java.util.*
 
 @Component
-class LogFilter: OncePerRequestFilter() {
-
-    override fun doFilterInternal(
-        request: jakarta.servlet.http.HttpServletRequest,
-        response: jakarta.servlet.http.HttpServletResponse,
-        filterChain: jakarta.servlet.FilterChain
-    ) {
-        //todo this doesnt filter out the actuator. need investigate
-        if (!request.contextPath.contains("actuator")){
+class LogFilter: WebFilter {
+    companion object {
+        val logger: Log = LogFactory.getLog(LogFilter::class.java)
+    }
+    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
+        if (!exchange.request.path.toString().contains("actuator")){
             val REQUEST_ID = "requestId"
-            var requestId = request.getHeader(REQUEST_ID)
+            var requestId = exchange.request.headers[REQUEST_ID]?.get(0)
             if (requestId == null) {
                 requestId = UUID.randomUUID().toString()
             }
@@ -24,19 +26,11 @@ class LogFilter: OncePerRequestFilter() {
             MDC.put(REQUEST_ID, requestId)
 
             try {
-                logger.info("Started process request with $REQUEST_ID : $requestId")
-                filterChain.doFilter(request, response)
+                logger.info("Started process request with $REQUEST_ID : $requestId, endpoint is ${exchange.request.path}")
             } finally {
                 MDC.clear()
             }
         }
-    }
-
-    override fun shouldNotFilterAsyncDispatch(): Boolean {
-        return false
-    }
-
-    override fun shouldNotFilterErrorDispatch(): Boolean {
-        return false
+        return chain.filter(exchange)
     }
 }
