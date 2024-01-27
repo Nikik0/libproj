@@ -23,11 +23,6 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-
-	// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
-	implementation("org.springframework.boot:spring-boot-starter-web:3.2.1")
-
-
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 	implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.3.0")
@@ -37,7 +32,11 @@ dependencies {
 	implementation("io.micrometer:micrometer-registry-prometheus:1.12.1")
 	implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 	implementation("io.sentry:sentry-spring-boot-starter:7.2.0")
-	compileOnly("javax.servlet:javax.servlet-api:4.0.1")
+	compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+
+// https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
+	implementation("org.springframework.boot:spring-boot-starter-tomcat:3.2.2")
+
 	// https://mvnrepository.com/artifact/io.sentry/sentry-logback
 	testImplementation("io.sentry:sentry-logback:7.2.0")
 	runtimeOnly("org.postgresql:postgresql")
