@@ -291,7 +291,7 @@ class IntegrationTests(
 
     private val tables = listOf(
         "actor", "address",
-        "customer", "customer_address", "customer_favourite_movies",
+        "customer", "customer_favourite_movies",
         "customer_watched_movies", "movie", "movie_actor",
         "studio", "studio_movie", "tag", "tag_movie"
     )
@@ -334,6 +334,7 @@ class IntegrationTests(
             id = 1,
             name = "First name",
             surname = "First Surname",
+            addressId = addressFirst.id!!,
             address = addressFirst,
             watched = emptyList(),
             favorites = emptyList()
@@ -342,6 +343,7 @@ class IntegrationTests(
             id = 2,
             name = "Second name",
             surname = "Second Surname",
+            addressId = addressSecond.id!!,
             address = addressSecond,
             watched = emptyList(),
             favorites = emptyList()

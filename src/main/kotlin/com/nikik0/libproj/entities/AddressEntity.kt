@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table
 @Table(name = "address")
 data class AddressEntity(
     @Id
-    val id: Long,
+    val id: Long?,
     val country: String?,
     val state: String?,
     val city: String?,

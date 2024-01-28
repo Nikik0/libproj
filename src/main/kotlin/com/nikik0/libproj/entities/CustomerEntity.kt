@@ -4,6 +4,7 @@ import com.nikik0.libproj.dtos.CustomerDto
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.PersistenceCreator
 import org.springframework.data.annotation.Transient
+import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
 fun CustomerEntity.toDto(): CustomerDto {
@@ -31,6 +32,8 @@ data class CustomerEntity(
     val id: Long,
     val name: String,
     val surname:String,
+    @Column("address_id")
+    val addressId: Long,
     @Transient
     var address: AddressEntity?,
     @Transient
@@ -42,6 +45,7 @@ data class CustomerEntity(
     constructor(
         id: Long,
         name: String,
-        surname: String
-    ) : this(id, name, surname, null, emptyList(), emptyList())
+        surname: String,
+        addressId: Long
+    ) : this(id, name, surname, addressId, null, emptyList(), emptyList())
 }

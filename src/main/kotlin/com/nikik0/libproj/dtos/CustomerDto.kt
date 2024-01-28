@@ -1,13 +1,11 @@
 package com.nikik0.libproj.dtos
 
 import com.nikik0.libproj.entities.AddressEntity
-import com.nikik0.libproj.entities.CustomerEntity
 import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotEmpty
 
-fun CustomerDto.mapToAddress() =
+fun CustomerDto.mapToAddress(addressId: Long?) =
     AddressEntity(
-        id = this.id,
+        id = addressId,
         country = this.country,
         state = this.state,
         city = this.city,
@@ -18,27 +16,6 @@ fun CustomerDto.mapToAddress() =
         apartmentNumber = this.apartmentNumber,
         additionalInfo = this.additionalInfo
     )
-
-fun CustomerDto.mapToCustomerEntityAndAddress(): Pair<CustomerEntity, AddressEntity> {
-    val address = AddressEntity(            //todo refactor for null checks
-        id = this.id,
-        country = this.country!!,
-        state = this.state!!,
-        city = this.city!!,
-        district = this.district!!,
-        street = this.street!!,
-        building = this.building!!,
-        buildingLiteral = this.buildingLiteral!!,
-        apartmentNumber = this.apartmentNumber!!,
-        additionalInfo = this.additionalInfo!!
-    )
-    val customerEntity = CustomerEntity(
-        id = this.id,
-        name = this.name,
-        surname = this.surname
-    )
-    return Pair(customerEntity, address)
-}
 
 data class CustomerDto(
     val id: Long,
