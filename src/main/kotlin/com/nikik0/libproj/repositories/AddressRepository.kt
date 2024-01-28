@@ -9,8 +9,5 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface AddressRepository : CoroutineCrudRepository <AddressEntity, Long> {
-    @Query("select a.* from address a join customer_address ca on a.id = ca.address_id where ca.customer_id = :customerId limit 1")
-    //@Query("select * from address limit 1")
-    fun findAddressForCustomerId(customerId: Long): Flow<AddressEntity>
 
 }
