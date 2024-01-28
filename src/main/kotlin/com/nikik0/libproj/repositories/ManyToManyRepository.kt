@@ -17,12 +17,6 @@ class ManyToManyRepository (
     private val client: DatabaseClient
         ){
 
-    suspend fun customerAddressInsert(customerId: Long, addressId: Long): Unit {
-        client.sql("INSERT into customer_address values ($1, $2)")
-            .bind(0, customerId)
-            .bind(1, addressId)
-            .await()
-    }
 
     suspend fun customerFavouriteMovieInsert(customerId: Long, movieId: Long){
         client.sql("INSERT into customer_favourite_movies values ($1, $2)")
