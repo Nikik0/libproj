@@ -1,7 +1,6 @@
 package com.nikik0.libproj.service
 
 import com.nikik0.libproj.dtos.CustomerDto
-import com.nikik0.libproj.dtos.mapToAddress
 import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
@@ -10,12 +9,10 @@ import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
 import com.nikik0.libproj.services.CustomerServiceImpl
 import com.nikik0.libproj.services.MovieService
-import com.nikik0.libproj.services.MovieServiceImpl
 import io.mockk.coEvery
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
-import io.mockk.spyk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -26,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.http.HttpStatus
 
 @ExtendWith(MockKExtension::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -97,6 +93,7 @@ class CustomerServiceTest {
             id = 1,
             name = "First name",
             surname = "First Surname",
+            addressId = address1.id!!,
             address = address1,
             watched = emptyList(),
             favorites = emptyList()
@@ -105,6 +102,7 @@ class CustomerServiceTest {
             id = 2,
             name = "Second name",
             surname = "Second Surname",
+            addressId = address2.id!!,
             address = address2,
             watched = emptyList(),
             favorites = emptyList()
@@ -139,15 +137,13 @@ class CustomerServiceTest {
         // given
         coEvery { addressRepository.save(address1) } returns address1
         coEvery { addressRepository.save(address2) } returns address2
+        coEvery { addressRepository.findById(address1.id!!) } returns address1
+        coEvery { addressRepository.findById(address2.id!!) } returns address2
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
             watched = listOf(movieEntity1, movieEntity2)
             favorites = listOf(movieEntity1)
         }
         coEvery { customerRepository.findById(customerEntity2.id) } returns customerEntity2
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity2.id, address2.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity2.id) } returns flowOf(address2)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1, movieEntity2)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity2.id) } returns flowOf()
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
@@ -169,8 +165,8 @@ class CustomerServiceTest {
     fun `getAll returns flow with correct dtos`() = runTest {
         // given
         coEvery { customerRepository.findAll() } returns flowOf(customerEntity1, customerEntity2)
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity2.id) } returns flowOf(address2)
+        coEvery { addressRepository.findById(address1.id!!) } returns address1
+        coEvery { addressRepository.findById(address2.id!!) } returns address2
 
         // when
         val result = customerService.getAllCustomers().toList()
@@ -183,7 +179,18 @@ class CustomerServiceTest {
     fun `saveCustomer returns correct dto of the saved customer`() = runTest {
         // given
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { addressRepository.save(address2) } returns address2
+        coEvery { addressRepository.save(AddressEntity(
+            id = null,
+            country = address2.country,
+            state = address2.state,
+            city = address2.city,
+            district = address2.district,
+            street = address2.street,
+            building = address2.building,
+            buildingLiteral = address2.buildingLiteral,
+            apartmentNumber = address2.apartmentNumber,
+            additionalInfo = address2.additionalInfo
+        )) } returns address2
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1.apply {
             watched = listOf(movieEntity1, movieEntity2)
             favorites = listOf(movieEntity1)
@@ -191,10 +198,6 @@ class CustomerServiceTest {
         coEvery { customerRepository.findById(customerEntity2.id) } returns null
         coEvery { customerRepository.save(customerEntity1) } returns customerEntity1
         coEvery { customerRepository.save(customerEntity2) } returns customerEntity2
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity2.id, address2.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity2.id) } returns flowOf(address2)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns emptyFlow()
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity2.id) } returns emptyFlow()
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns emptyFlow()
@@ -216,8 +219,7 @@ class CustomerServiceTest {
         coEvery { customerRepository.findById(customerEntity1.id) } returns customerEntity1
         coEvery { manyToManyRepository.customerWatchedMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
+        coEvery { addressRepository.findById(address1.id!!) } returns address1
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf()
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns false
@@ -241,8 +243,6 @@ class CustomerServiceTest {
         }
         coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
@@ -261,8 +261,7 @@ class CustomerServiceTest {
         }
         coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
+        coEvery { addressRepository.findById(address1.id!!) } returns address1
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
@@ -287,8 +286,6 @@ class CustomerServiceTest {
         }
         coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
@@ -307,8 +304,6 @@ class CustomerServiceTest {
         }
         coEvery { manyToManyRepository.customerFavouriteMovieInsert(customerEntity1.id, movieEntity1.id) } returns Unit
         coEvery { addressRepository.save(address1) } returns address1
-        coEvery { manyToManyRepository.customerAddressInsert(customerEntity1.id, address1.id) } returns Unit
-        coEvery { addressRepository.findAddressForCustomerId(customerEntity1.id) } returns flowOf(address1)
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf()
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf()
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns false
