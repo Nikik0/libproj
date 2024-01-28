@@ -29,7 +29,7 @@ class CustomerServiceImpl(
 
     override suspend fun getCustomer(id: Long) =
         customerRepository.findById(id)?.apply {
-            address = addressRepository.findAddressForCustomerId(this.id).toList().first()
+            address = addressRepository.findById(addressId)
             watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
         }?.toDto()
@@ -39,7 +39,7 @@ class CustomerServiceImpl(
             )
 
     override suspend fun getAllCustomers() = customerRepository.findAll().map {
-        it.address = addressRepository.findAddressForCustomerId(it.id).first()
+        it.address = addressRepository.findById(it.addressId)
         it.toDto()
     }
 
@@ -79,18 +79,15 @@ class CustomerServiceImpl(
         }.toDto()
     }
      */
-
-    @Transactional
-    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
-        println("started saving")
-        val address = addressRepository.save(customerDto.mapToAddress())
-        val customerEntity = customerRepository.findById(customerDto.id)?.let {
+    /*
+            val customerEntity = customerRepository.findById(customerDto.id)?.let {
             customerRepository.save(
                 CustomerEntity(
                     id = it.id,
                     name = customerDto.name,
                     surname = customerDto.surname,
-                    address = address,
+                    addressId = it.addressId,
+                    address = addressRepository.save(customerDto.mapToAddress(it.addressId)),
                     watched = it.watched,
                     favorites = it.favorites
                 )
@@ -101,17 +98,48 @@ class CustomerServiceImpl(
                     id = customerDto.id,
                     name = customerDto.name,
                     surname = customerDto.surname,
+                    addressId = 0,
+                    address = addressRepository.save(customerDto.mapToAddress(null)),
+                    watched = emptyList(),
+                    favorites = emptyList()
+                )
+            )
+        }
+     */
+
+
+    @Transactional
+    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
+        val customerEntity = customerRepository.findById(customerDto.id)?.let {
+            val address = addressRepository.save(customerDto.mapToAddress(it.addressId))
+            customerRepository.save(
+                CustomerEntity(
+                    id = it.id,
+                    name = customerDto.name,
+                    surname = customerDto.surname,
+                    addressId = address.id!!,
+                    address = address,
+                    watched = it.watched,
+                    favorites = it.favorites
+                )
+            )
+        }?:let {
+            val address = addressRepository.save(customerDto.mapToAddress(null))
+            customerRepository.save(
+                CustomerEntity(
+                    id = customerDto.id,
+                    name = customerDto.name,
+                    surname = customerDto.surname,
+                    addressId = address.id!!,
                     address = address,
                     watched = emptyList(),
                     favorites = emptyList()
                 )
             )
         }
-        manyToManyRepository.customerAddressInsert(customerEntity.id, address.id) //todo this duplicates address
         customerDto.watched?.forEach { addToWatched(customerEntity.id, it) }
         customerDto.favourites?.forEach { addToFavourites(customerEntity.id, it) }
         return customerEntity.apply {
-            this.address = addressRepository.findAddressForCustomerId(this.id).first()
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
         }.toDto()
