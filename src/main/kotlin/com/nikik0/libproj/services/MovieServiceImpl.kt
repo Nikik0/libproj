@@ -5,6 +5,8 @@ import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.apache.commons.logging.LogFactory
+import org.slf4j.MDC
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,13 +18,18 @@ class MovieServiceImpl(
     private val studioService: StudioService,
     private val manyToManyRepository: ManyToManyRepository
 ) : MovieService {
-
+    companion object{
+        private val logger = LogFactory.getLog(MovieServiceImpl::class.java)
+    }
     override suspend fun getOneYeager(id: Long) =
         movieRepository.findById(id)?.apply {
             this.actors = actorService.findActorsForMovie(this.id)
             this.studio = studioService.findStudioForMovie(this.id)
             this.tags = tagService.findTagsForMovie(this.id)
-        }?.mapToDto()
+        }?.mapToDto().let {
+            logger.info("Successfully retrieved movie ${it?.id}")
+            it
+        }
 
     @Transactional
     override suspend fun saveOne(movieDto: MovieDto): MovieDto {
@@ -39,7 +46,10 @@ class MovieServiceImpl(
         manyToManyRepository.movieActorInsert(movieEntity.id, movieEntity.actors.map { it.id })
         manyToManyRepository.tagMovieInsert(movieEntity.tags.map { it.id }, movieEntity.id)
         if (movieEntity.studio != null) manyToManyRepository.studioMovieInsert(movieEntity.studio!!.id, movieEntity.id)
-        return movieEntity.mapToDto()
+        return movieEntity.mapToDto().let {
+            logger.info("Successfully saved movie ${it.id}")
+            it
+        }
     }
 
     override suspend fun getAllYeager() = movieRepository.findAll().map {
@@ -47,20 +57,39 @@ class MovieServiceImpl(
         it.studio = studioService.findStudioForMovie(it.id)
         it.tags = tagService.findTagsForMovie(it.id)
         it.mapToDto()
+    }.let {
+        logger.info("Successfully retrieved movies (yeager)")
+        it
     }
 
-    override suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }
+    override suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }.let {
+        logger.info("Successfully retrieved movies (lazy)")
+        it
+    }
+
     override suspend fun findByTag(tag: String) : Flow<MovieDto>? {
         val tagFromRepo = tagService.findByName(tag)
-        return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() } else null
+        return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }.let {
+            logger.info("Successfully retrieved movies by tag ${tagFromRepo.name}")
+            it
+        } else null
     }
 
     override suspend fun findFavMoviesForCustomerId(customerId: Long) =
-        movieRepository.findFavMoviesForCustomerId(customerId)
+        movieRepository.findFavMoviesForCustomerId(customerId).let {
+            logger.info("Successfully retrieved fav movies for customer $customerId")
+            it
+        }
 
     override suspend fun findWatchedMoviesForCustomerId(customerId: Long) =
-        movieRepository.findWatchedMoviesForCustomerId(customerId)
+        movieRepository.findWatchedMoviesForCustomerId(customerId).let {
+            logger.info("Successfully retrieved watched movies for customer $customerId")
+            it
+        }
 
     override suspend fun getOneLazy(movieId: Long) =
-        movieRepository.findById(movieId)
+        movieRepository.findById(movieId).let {
+            logger.info("Successfully retrieved lazy movie ${it?.id}")
+            it
+        }
 }
