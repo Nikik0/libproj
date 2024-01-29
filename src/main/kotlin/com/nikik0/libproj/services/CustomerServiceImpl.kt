@@ -9,15 +9,14 @@ import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
 import com.nikik0.libproj.repositories.*
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException
+import org.apache.commons.logging.LogFactory
+import org.slf4j.MDC
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
-import org.springframework.http.ProblemDetail
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import reactor.kotlin.core.publisher.toMono
 
 @Service
 class CustomerServiceImpl(
@@ -26,21 +25,29 @@ class CustomerServiceImpl(
     private val manyToManyRepository: ManyToManyRepository,
     private val movieService: MovieService
 ) : CustomerService {
+    companion object{
+        private val logger = LogFactory.getLog(CustomerServiceImpl::class.java)
+    }
 
     override suspend fun getCustomer(id: Long) =
         customerRepository.findById(id)?.apply {
             address = addressRepository.findById(addressId)
             watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }?.toDto()
-            ?: throw NotFoundEntityResponseException(
-                HttpStatus.NOT_FOUND,
-                "Customer with id $id wasn't found"
-            )
+        }?.toDto().let {
+            logger.info("Successfully retrieved customer ${it?.id}")
+            it
+        } ?: throw NotFoundEntityResponseException(
+            HttpStatus.NOT_FOUND,
+            "Customer with id $id wasn't found"
+        )
 
     override suspend fun getAllCustomers() = customerRepository.findAll().map {
         it.address = addressRepository.findById(it.addressId)
         it.toDto()
+    }.let {
+        logger.info("Successfully retrieved customers")
+        it
     }
 
 //working
@@ -110,6 +117,7 @@ class CustomerServiceImpl(
 
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
+        logger.info("Started saving customer request, id is ${customerDto.id}")
         val customerEntity = customerRepository.findById(customerDto.id)?.let {
             val address = addressRepository.save(customerDto.mapToAddress(it.addressId))
             customerRepository.save(
@@ -142,7 +150,10 @@ class CustomerServiceImpl(
         return customerEntity.apply {
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }.toDto()
+        }.toDto().let {
+            logger.info("Successfully saved customer with id ${it.id}")
+            it
+        }
     }
 
     // todo check everywhere for cascade delete
@@ -173,6 +184,7 @@ class CustomerServiceImpl(
             "Watched movie with id $movieId is already present in watched list for user $customerId"
         )
         manyToManyRepository.customerWatchedMovieInsert(customerId, movieId)
+        logger.info("Successfully added movie $movieId to watched for customer $customerId")
         return getCustomer(customerId)
     }
 
@@ -207,8 +219,12 @@ class CustomerServiceImpl(
         ) throw AlreadyPresentResponseException( //todo might want to ignore these if saving already present customer with watched list of old and new movies
             HttpStatus.CONFLICT,
             "Favourite movie with id $movieId is already present in favourites list for user $customerId"
-        )
+        ).let {
+            logger.error("Error $it occurred in request ${MDC.get("requestId")}")
+            it
+        }
         manyToManyRepository.customerFavouriteMovieInsert(customerId, movieId)
+        logger.info("Successfully added movie $movieId to favs for customer $customerId")
         return getCustomer(customerId)
     }
 }
