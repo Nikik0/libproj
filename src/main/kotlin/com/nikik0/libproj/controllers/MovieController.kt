@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import kotlinx.coroutines.slf4j.MDCContext
+import kotlinx.coroutines.withContext
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
@@ -41,7 +43,9 @@ class MovieController (
         ]
     )
     @GetMapping("/get/{id}")
-    suspend fun getSingle(@PathVariable id: Long) = movieService.getOneYeager(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    suspend fun getSingle(@PathVariable id: Long) = withContext(MDCContext()){
+        movieService.getOneYeager(id)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    }
 
     @Operation(summary = "Get all movies with tags, actors and studios (yeager load)")
     @ApiResponses(
@@ -54,7 +58,9 @@ class MovieController (
         ]
     )
     @GetMapping("/get/all/yeager")
-    suspend fun getAll() = movieService.getAllYeager().let { ResponseEntity.ok(it) }
+    suspend fun getAll() = withContext(MDCContext()){
+        movieService.getAllYeager().let { ResponseEntity.ok(it) }
+    }
 
     @Operation(summary = "Get all movies without additional info (lazy load)")
     @ApiResponses(
@@ -67,7 +73,9 @@ class MovieController (
         ]
     )
     @GetMapping("/get/all/lazy")
-    suspend fun getAllLazy() = movieService.getAllLazy().let { ResponseEntity.ok(it) }
+    suspend fun getAllLazy() = withContext(MDCContext()){
+        movieService.getAllLazy().let { ResponseEntity.ok(it) }
+    }
 
     @Operation(summary = "Save new movie with tags, actors and studio")
     @ApiResponses(
@@ -80,7 +88,9 @@ class MovieController (
         ]
     )
     @PostMapping("/save")
-    suspend fun saveOne(@Validated @RequestBody movieDto: MovieDto) = movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
+    suspend fun saveOne(@Validated @RequestBody movieDto: MovieDto) = withContext(MDCContext()){
+        movieService.saveOne(movieDto).let { ResponseEntity.ok(it) }
+    }
 
     @Operation(summary = "Find all movies by tag (case insensitive)")
     @ApiResponses(
@@ -98,6 +108,8 @@ class MovieController (
         ]
     )
     @GetMapping("/find/tag/{tag}")
-    suspend fun findByTag(@PathVariable tag: String) = movieService.findByTag(tag)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    suspend fun findByTag(@PathVariable tag: String) = withContext(MDCContext()){
+        movieService.findByTag(tag)?.let { ResponseEntity.ok(it) } ?: ResponseEntity(HttpStatus.NOT_FOUND)
+    }
 
 }
