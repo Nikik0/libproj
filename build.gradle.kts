@@ -33,6 +33,10 @@ dependencies {
 	implementation("net.logstash.logback:logstash-logback-encoder:7.4")
 	implementation("io.sentry:sentry-spring-boot-starter:7.2.0")
 
+	// https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-slf4j
+	runtimeOnly("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.8.0-RC2")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.8.0-RC2")
+
 	// https://mvnrepository.com/artifact/io.sentry/sentry-logback
 	testImplementation("io.sentry:sentry-logback:7.2.0")
 	runtimeOnly("org.postgresql:postgresql")
