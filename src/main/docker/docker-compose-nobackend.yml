@@ -1,8 +1,6 @@
 version: "3.9"
 services:
   postgres_db:
-    container_name: db_container
-    hostname: db
     image: postgres:14.8-alpine3.18
     command:
       - "postgres"
@@ -34,13 +32,14 @@ services:
       - "pg_stat_statements.max=10000"
       - "-c"
       - "pg_stat_statements.track=all"
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: "movies-db"
-      POSTGRES_USER: "dev"
-      POSTGRES_PASSWORD: "dev123"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
-      - ./docker-db/init:/docker-entrypoint-initdb.d
       - ./docker-db/data/db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
@@ -56,8 +55,20 @@ services:
         limits:
           cpus: '1'
           memory: 4G
-    networks:
-      - postgres
+
+  flyway:
+    image: flyway/flyway:10
+    command: -locations=filesystem:/flyway/sql -connectRetries=60 migrate
+    env_file:
+      - .env
+    volumes:
+      - ./docker-db/flyway/migrations:/flyway/sql
+    environment:
+      - FLYWAY_USER=${DB_USERNAME}
+      - FLYWAY_PASSWORD=${DB_PASSWORD}
+      - FLYWAY_URL=jdbc:postgresql://postgres_db/${DB_NAME}
+    depends_on:
+      - postgres_db
 
   pgadmin:
     hostname: admin_console
@@ -79,9 +90,6 @@ services:
         limits:
           cpus: '0.5'
           memory: 1G
-    networks:
-      - postgres
-
 
   setup:
     build:
@@ -144,7 +152,6 @@ services:
       - elasticsearch
 
   logstash:
-    #    image: library/logstash
     build:
       context: docker-elk/logstash/
       args:
@@ -169,6 +176,3 @@ volumes:
   setup:
   elasticsearch:
 
-networks:
-  postgres:
-    driver: bridge
