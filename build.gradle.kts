@@ -48,6 +48,7 @@ dependencies {
 	testImplementation("org.testcontainers:postgresql")
 	testImplementation("io.mockk:mockk:1.13.8")
 	testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0-RC")
+	testImplementation("org.flywaydb:flyway-core:9.16.0")
 }
 
 tasks.withType<KotlinCompile> {
