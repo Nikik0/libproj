@@ -13,6 +13,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import org.assertj.core.api.Assertions.*
+import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -38,7 +39,8 @@ class IntegrationTests(
     companion object {
         private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
             .apply {
-                this.withDatabaseName("movies-db").withUsername("test").withPassword("test123").withInitScript("init.sql")
+                this.withDatabaseName("movies-db").withUsername("test").withPassword("test123")
+
             }
 
         @JvmStatic
@@ -52,10 +54,22 @@ class IntegrationTests(
             return "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/${postgres.databaseName}"
         }
 
+        private fun setupFlyway(){
+            val flyway = Flyway.configure()
+                .locations("filesystem:src/main/docker/docker-db/flyway/migrations/")
+                .baselineOnMigrate(true)
+                .schemas("public")
+                .dataSource(postgres.jdbcUrl, postgres.username, postgres.password)
+                .load()
+            flyway.info()
+            flyway.migrate()
+        }
+
         @JvmStatic
         @BeforeAll
         internal fun setUp(){
             postgres.start()
+            setupFlyway()
         }
     }
 
