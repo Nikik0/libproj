@@ -12,15 +12,12 @@ interface CustomerService {
 
     suspend fun getAllCustomers(): Flow<CustomerDto>
 
-    @Transactional
     suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto?
 
     suspend fun deleteCustomer(customer: CustomerDto)
 
-    @Transactional
     suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto?
 
-    @Transactional
     suspend fun addToFavourites(customerId: Long, movieDto: MovieDto): CustomerDto?
 
 }
