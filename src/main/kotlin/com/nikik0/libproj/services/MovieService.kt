@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional
 interface MovieService {
     suspend fun getOneYeager(id: Long): MovieDto?
 
-    @Transactional
     suspend fun saveOne(movieDto: MovieDto): MovieDto
 
     suspend fun getAllYeager(): Flow<MovieDto>
