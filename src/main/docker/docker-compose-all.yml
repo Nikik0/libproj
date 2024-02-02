@@ -33,6 +33,12 @@ services:
     ports:
       - "8083:8083"
     restart: always
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider localhost:${SERVER_PORT}/actuator/health || exit 1
+      interval: 5s
+      timeout: 2s
+      retries: 3
+      start_period: 10s
     depends_on:
       - elasticsearch
       - postgres_db
@@ -82,7 +88,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dev -d movies-db" ]
+      test: [ "CMD-SHELL", "pg_isready -U $DB_USERNAME -d $DB_NAME" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -116,8 +122,8 @@ services:
     depends_on:
       - postgres_db
     environment:
-      PGADMIN_DEFAULT_EMAIL: "dev@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: "dev123"
+      PGADMIN_DEFAULT_EMAIL: ${DB_USERNAME}@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: ${DB_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: "False"
     volumes:
       - ./docker-db/data/pgadmin-data:/var/lib/pgadmin
@@ -187,16 +193,10 @@ services:
     environment:
       node.name: elasticsearch
       ES_JAVA_OPTS: -Xms512m -Xmx512m
-      # Bootstrap password.
-      # Used to initialize the keystore during the initial startup of
-      # Elasticsearch. Ignored on subsequent runs.
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
-      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
-      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
 
   kibana:
-    #    image: library/kibana
     build:
       context: docker-elk/kibana/
       args:
