@@ -28,6 +28,7 @@ Used technologies:
 * Testcontainers
 * Mockk
 * JUnit
+* Gradle
 * ELK (Elastic, Logstash, Kibana)
 * Grafana + Prometheus
 * Swagger
