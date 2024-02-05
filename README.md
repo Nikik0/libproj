@@ -29,8 +29,7 @@ Used technologies:
 * Mockk
 * JUnit
 * ELK (Elastic, Logstash, Kibana)
-* Grafana
-* Prometheus
+* Grafana + Prometheus
 * Swagger
 
 ## Getting Started
@@ -41,7 +40,7 @@ Used technologies:
 
 ### Installing
 
-* No installing needed, just run it with docker
+* No installation needed, just run it in containers
 
 ### Executing program
 
@@ -49,7 +48,7 @@ Used technologies:
 ```
 git clone https://github.com/Nikik0/libproj.git
 ```
-* Go to directory with docker compose files
+* Go to the directory with docker compose files
 ```
 cd libproj/src/main/docker
 ```
@@ -57,7 +56,7 @@ cd libproj/src/main/docker
 ```
 docker-compose -f docker-compose-all.yml up testcontainers_bridge_to_docker_daemon_on_host -d
 ```
-* After the bridge container is up, run the rest of the containers (might require alot of ram (up to 6 gb), proceed without elk if running on old machine)
+* After the bridge container is up, run the rest of the containers (might require alot of ram (up to 6 gb), proceed without elk if running on older machine)
 ```
 docker-compose -f docker-compose-all.yml up -d
 ```
