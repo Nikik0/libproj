@@ -1,0 +1,887 @@
+{
+	"info": {
+		"_postman_id": "16c6d43e-bbe0-45d9-b8e4-ea43205bd33e",
+		"name": "libproj",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "28525758"
+	},
+	"item": [
+		{
+			"name": "customer endpoints",
+			"item": [
+				{
+					"name": "get requests",
+					"item": [
+						{
+							"name": "error producing requests",
+							"item": [
+								{
+									"name": "customer get single (404)",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{apphost}}:{{port}}/api/v1/customer/get/9999",
+											"host": [
+												"{{apphost}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"get",
+												"9999"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "customer get single",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/get/1",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"get",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "customer get all",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/get/all",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"get",
+										"all"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "post requests",
+					"item": [
+						{
+							"name": "error producing requests",
+							"item": [
+								{
+									"name": "customer save new (blank name&surname)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"  \",\r\n    \"surname\": \"  \",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{apphost}}:{{port}}/api/v1/customer/save",
+											"host": [
+												"{{apphost}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"save"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "customer save with movies (movie is in fav, not in watched)",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"Someone New\",\r\n    \"surname\": \"Brack Ars\",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\",\r\n    \"watched\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Car Crash\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ],\r\n    \"favourites\": [\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Car Crash new\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ]\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{apphost}}:{{port}}/api/v1/customer/save",
+											"host": [
+												"{{apphost}}"
+											],
+											"port": "{{port}}",
+											"path": [
+												"api",
+												"v1",
+												"customer",
+												"save"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "customer save new",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Someone\",\r\n    \"surname\": \"Brack\",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/save",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"save"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "customer update existing",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": 1,\r\n    \"name\": \"Not Someone\",\r\n    \"surname\": \"Not Brack\",\r\n    \"country\": \"Not Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Not Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/save",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"save"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "customer add fav",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": 2,\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"id\": 1,\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/1/favourites/add",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"1",
+										"favourites",
+										"add"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "customer add watched",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"id\": 2,\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"id\": 1,\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/1/watched/add",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"1",
+										"watched",
+										"add"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "customer save with movies",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Someone New\",\r\n    \"surname\": \"Brack Ars\",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\",\r\n    \"watched\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Car Crash\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Car Crash new\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ],\r\n    \"favourites\": [\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Car Crash new\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/customer/save",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"customer",
+										"save"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "actuator requests",
+			"item": [
+				{
+					"name": "healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{apphost}}:{{port}}/actuator/health",
+							"host": [
+								"{{apphost}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "movie endpoints",
+			"item": [
+				{
+					"name": "post requests",
+					"item": [
+						{
+							"name": "save movie",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/movie/save",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"movie",
+										"save"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "get requests",
+					"item": [
+						{
+							"name": "get one movie",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/movie/get/1",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"movie",
+										"get",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get movies by tag",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/movie/find/tag/action",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"movie",
+										"find",
+										"tag",
+										"action"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all movie lazy",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/movie/get/all/lazy",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"movie",
+										"get",
+										"all",
+										"lazy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "get all movie yeager",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{apphost}}:{{port}}/api/v1/movie/get/all/yeager",
+									"host": [
+										"{{apphost}}"
+									],
+									"port": "{{port}}",
+									"path": [
+										"api",
+										"v1",
+										"movie",
+										"get",
+										"all",
+										"yeager"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "old unused requests",
+			"item": [
+				{
+					"name": "customer get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/api/v1/customer/get/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"get",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/health",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "customer get all",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8083/api/v1/customer/get/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"get",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "customer save new",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Someone\",\r\n    \"surname\": \"Brack\",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8083/api/v1/customer/save",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "customer save with movies",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Someone New\",\r\n    \"surname\": \"Brack Ars\",\r\n    \"country\": \"Russia\",\r\n    \"state\": \"state or smth\",\r\n    \"city\": \"Moscow\",\r\n    \"district\": \"Central\",\r\n    \"street\": \"Main\",\r\n    \"building\": 1,\r\n    \"buildingLiteral\": \"a\",\r\n    \"apartmentNumber\": 23,\r\n    \"additionalInfo\": \"someinfo\",\r\n    \"watched\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Car Crash\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Car Crash new\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ],\r\n    \"favourites\": [\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Car Crash new\",\r\n            \"producer\": \"Kate Stolk\",\r\n            \"actors\": [],\r\n            \"tags\": [],\r\n            \"studio\": null,\r\n            \"budget\": 23000000,\r\n            \"movieUrl\": \"smth.com/hherErw\"\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8083/api/v1/customer/save",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"save"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "test",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/customer/test",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "customer add fav",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 2,\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"id\": 1,\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8083/api/v1/customer/1/favourites/add",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"1",
+								"favourites",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "customer add watched",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"id\": 2,\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"id\": 1,\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"id\": 2,\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"id\": 1,\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8083/api/v1/customer/1/watched/add",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"customer",
+								"1",
+								"watched",
+								"add"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get one movie",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/movie/get/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"get",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get movie by tag",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/movie/get/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"get",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all movie lazy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/movie/get/all/lazy",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"get",
+								"all",
+								"lazy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all movie yeager",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/movie/get/all/yeager",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"get",
+								"all",
+								"yeager"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get one movie Copy",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8083/api/v1/movie/get/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"get",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create movie",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Car Crash\",\r\n    \"producer\": \"Kate Stolk\",\r\n    \"actors\": [\r\n        {\r\n            \"name\": \"Deri\",\r\n            \"surname\": \"Aaron\",\r\n            \"age\": 43\r\n        },\r\n        {\r\n            \"name\": \"Lizzy\",\r\n            \"surname\": \"Allen\",\r\n            \"age\": 23\r\n        }\r\n    ],\r\n    \"tags\": [\r\n        {\r\n            \"name\": \"Horror\"\r\n        },\r\n        {\r\n            \"name\": \"Documentary\"\r\n        }\r\n    ],\r\n    \"studio\": {\r\n        \"name\": \"Top studio\",\r\n        \"employees\": 333,\r\n        \"owner\": \"Neear D.R.\"\r\n    },\r\n    \"budget\": 23000000,\r\n    \"movieUrl\": \"smth.com/hherErw\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8083/api/v1/movie/save",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8083",
+							"path": [
+								"api",
+								"v1",
+								"movie",
+								"save"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "apphost",
+			"value": "localhost",
+			"type": "string"
+		},
+		{
+			"key": "port",
+			"value": "8083",
+			"type": "string"
+		}
+	]
+}
