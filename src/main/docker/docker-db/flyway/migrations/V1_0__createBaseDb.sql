@@ -1,3 +1,16 @@
+create table movie(
+                      id serial primary key,
+                      name varchar(100),
+                      producer varchar(100),
+                      budget bigint,
+                      movie_url varchar(100)
+);
+create table customer(
+                         id serial primary key,
+                         name varchar(100),
+                         surname varchar(100),
+                         address_id bigint unique
+);
 create table address(
                         id serial primary key,
                         country varchar(100),
@@ -8,15 +21,10 @@ create table address(
                         building bigint,
                         building_literal varchar(100),
                         apartment_number bigint,
-                        additional_info varchar(100)
+                        additional_info varchar(100),
+                        foreign key (id) references customer(address_id) on delete cascade DEFERRABLE INITIALLY DEFERRED
 );
-create table movie(
-                      id serial primary key,
-                      name varchar(100),
-                      producer varchar(100),
-                      budget bigint,
-                      movie_url varchar(100)
-);
+alter table customer add constraint fk_customer_address foreign key (address_id) references address(id) DEFERRABLE INITIALLY DEFERRED;
 create table actor(
                       id serial primary key,
                       name varchar(100),
@@ -26,27 +34,20 @@ create table actor(
 create table movie_actor(
                             movie_id bigint,
                             actor_id bigint,
-                            foreign key (movie_id) references movie(id),
-                            foreign key (actor_id) references actor(id)
-);
-create table customer(
-                         id serial primary key,
-                         name varchar(100),
-                         surname varchar(100),
-                         address_id bigint,
-                         foreign key (address_id) references address(id)
+                            foreign key (movie_id) references movie(id) on delete cascade,
+                            foreign key (actor_id) references actor(id) on delete cascade
 );
 create table customer_watched_movies(
                                         customer_id bigint,
                                         watched_movie_id bigint,
-                                        foreign key (customer_id) references customer(id),
-                                        foreign key (watched_movie_id) references movie(id)
+                                        foreign key (customer_id) references customer(id) on delete cascade,
+                                        foreign key (watched_movie_id) references movie(id) on delete cascade
 );
 create table customer_favourite_movies(
                                           customer_id bigint,
                                           favourite_movie_id bigint,
-                                          foreign key (customer_id) references customer(id),
-                                          foreign key (favourite_movie_id) references movie(id)
+                                          foreign key (customer_id) references customer(id) on delete cascade,
+                                          foreign key (favourite_movie_id) references movie(id) on delete cascade
 );
 create table tag(
                     id serial primary key,
@@ -55,8 +56,8 @@ create table tag(
 create table tag_movie(
                           tag_id bigint,
                           movie_id bigint,
-                          foreign key (tag_id) references tag(id),
-                          foreign key (movie_id) references movie(id)
+                          foreign key (tag_id) references tag(id) on delete cascade,
+                          foreign key (movie_id) references movie(id) on delete cascade
 );
 create table studio(
                        id serial primary key,
@@ -67,8 +68,8 @@ create table studio(
 create table studio_movie(
                              studio_id bigint,
                              movie_id bigint,
-                             foreign key (studio_id) references studio(id),
-                             foreign key (movie_id) references movie(id)
+                             foreign key (studio_id) references studio(id) on delete cascade,
+                             foreign key (movie_id) references movie(id) on delete cascade
 );
 
 
