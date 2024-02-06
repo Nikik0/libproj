@@ -50,71 +50,6 @@ class CustomerServiceImpl(
         it
     }
 
-//working
-    /*
-
-        @Transactional
-    override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
-        val address = addressRepository.save(customerDto.mapToAddress())
-        val customerEntity = customerRepository.findById(customerDto.id)?.let {
-            customerRepository.save(
-                CustomerEntity(
-                    id = it.id,
-                    name = customerDto.name,
-                    surname = customerDto.surname,
-                    address = address,
-                    watched = it.watched,
-                    favorites = it.favorites
-                )
-            )
-        } ?: let {
-            customerRepository.save(
-                CustomerEntity(
-                    id = customerDto.id,
-                    name = customerDto.name,
-                    surname = customerDto.surname,
-                    address = address,
-                    watched = emptyList(),
-                    favorites = emptyList()
-                )
-            )
-        }
-
-       manyToManyRepository.customerAddressInsert(customerEntity.id, address.id)
-        return customerEntity.apply {
-            this.address = addressRepository.findAddressForCustomerId(this.id).first()
-        }.toDto()
-    }
-     */
-    /*
-            val customerEntity = customerRepository.findById(customerDto.id)?.let {
-            customerRepository.save(
-                CustomerEntity(
-                    id = it.id,
-                    name = customerDto.name,
-                    surname = customerDto.surname,
-                    addressId = it.addressId,
-                    address = addressRepository.save(customerDto.mapToAddress(it.addressId)),
-                    watched = it.watched,
-                    favorites = it.favorites
-                )
-            )
-        } ?: let {
-            customerRepository.save(
-                CustomerEntity(
-                    id = customerDto.id,
-                    name = customerDto.name,
-                    surname = customerDto.surname,
-                    addressId = 0,
-                    address = addressRepository.save(customerDto.mapToAddress(null)),
-                    watched = emptyList(),
-                    favorites = emptyList()
-                )
-            )
-        }
-     */
-
-
     @Transactional
     override suspend fun saveCustomer(customerDto: CustomerDto): CustomerDto? {
         logger.info("Started saving customer request, id is ${customerDto.id}")
@@ -156,7 +91,6 @@ class CustomerServiceImpl(
         }
     }
 
-    // todo check everywhere for cascade delete
     override suspend fun deleteCustomer(customer: CustomerDto) =
         customerRepository.deleteById(customer.id)
 

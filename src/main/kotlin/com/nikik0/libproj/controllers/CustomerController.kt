@@ -73,7 +73,7 @@ class CustomerController (
         ]
     )
     @DeleteMapping()
-    suspend fun deleteCustomer(customerDto: CustomerDto) = withContext(MDCContext()){
+    suspend fun deleteCustomer(@RequestBody customerDto: CustomerDto) = withContext(MDCContext()){
         customerService.deleteCustomer(customerDto).let { ResponseEntity.ok(HttpStatus.OK) }
     }
 

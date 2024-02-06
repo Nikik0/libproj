@@ -17,81 +17,11 @@ class ManyToManyRepository (
     private val client: DatabaseClient
         ){
 
-
     suspend fun customerFavouriteMovieInsert(customerId: Long, movieId: Long){
         client.sql("INSERT into customer_favourite_movies values ($1, $2)")
             .bind(0, customerId)
             .bind(1, movieId)
             .await()
-    }
-
-    suspend fun customerFavouriteMovieInsert(customerId: Long, movieIds: List<Long>){
-        //todo this should be a batch save if i'll figure out how to do it in r2dbc kotlin
-//        for (id in movieIds)
-//            client.sql("INSERT into customer_favourite_movies values ($1, $2)")
-//                .bind(0,customerId)
-//                .bind(1, id)
-//                .await()
-
-
-        client.inConnectionMany { connection ->
-            val statement = connection.createStatement("INSERT into customer_favourite_movies values ($1, $2)")
-//            movieIds.forEach {
-//                statement
-//                    .bind(0, customerId)
-//                    .bind(1, it)
-//                    .add()
-//            }
-            movieIds.dropLast(1).forEach {
-                statement
-                    .bind(0, customerId)
-                    .bind(1, it)
-                    .add()
-            }
-//            for (i in 0 until movieIds.size - 1){
-//                statement
-//                    .bind(0, customerId)
-//                    .bind(1, movieIds[i])
-//                    .add()
-//            }
-            statement
-                .bind(0, customerId)
-                .bind(1, movieIds[movieIds.size-1])
-
-            statement.execute().toFlux().flatMap { result ->
-                result.map { row, _ -> row.get("customer_id", Long::class.java) }
-            }
-        }.subscribe()
-        //val smth = client.sql("INSERT into customer_favourite_movies values ($1, $2)")
-//        client.inConnectionMany { connection -> {
-//            val state = connection.createStatement("INSERT into customer_favourite_movies values ($1, $2)")
-//            for (i in movieIds){
-//                state.bind(0,customerId)
-//                    .bind(1, i)
-//                    .add()
-//
-//            }
-//            return Flux.from(state.execut
-//                    e())
-        //
-//
-//            val statement: Unit = connection.createStatement("INSERT into customer_favourite_movies values ($1, $2)")
-//                .returnGeneratedValues("id")
-//
-//            for (p in data) {
-//                statement.bind(0, p.getTitle()).bind(1, p.getContent()).add()
-//            }
-//            return Flux.from(statement.execute()).flatMap<Any>(Function<T, Publisher<*>> { result: T ->
-//                result.map { row, rowMetadata ->
-//                    row.get(
-//                        "id",
-//                        UUID::class.java
-//                    )
-//                }
-//            }
-//            )
-
-//        } }
     }
 
     suspend fun customerWatchedMovieInsert(customerId: Long, movieId: Long){
