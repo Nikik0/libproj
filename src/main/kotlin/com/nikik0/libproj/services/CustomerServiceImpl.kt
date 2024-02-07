@@ -8,6 +8,10 @@ import com.nikik0.libproj.entities.toDto
 import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
+import com.nikik0.libproj.kafka.model.EntityAffected
+import com.nikik0.libproj.kafka.model.Event
+import com.nikik0.libproj.kafka.model.EventType
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -23,7 +27,8 @@ class CustomerServiceImpl(
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
     private val manyToManyRepository: ManyToManyRepository,
-    private val movieService: MovieService
+    private val movieService: MovieService,
+    private val eventProducer: EventProducer
 ) : CustomerService {
     companion object{
         private val logger = LogFactory.getLog(CustomerServiceImpl::class.java)
@@ -87,6 +92,12 @@ class CustomerServiceImpl(
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
         }.toDto().let {
             logger.info("Successfully saved customer with id ${it.id}")
+            eventProducer.publish(Event(
+                it.id,
+                EventType.CREATE,
+                EntityAffected.CUSTOMER,
+                "Customer created"
+            ))
             it
         }
     }
