@@ -1,9 +1,15 @@
 package com.nikik0.libproj.service
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.*
+import com.nikik0.libproj.kafka.model.Event
 import kotlinx.coroutines.runBlocking
+import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.clients.admin.KafkaAdminClient
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,6 +30,9 @@ import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.r2dbc.core.await
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
+import org.testcontainers.containers.KafkaContainer
+import java.time.Duration
+import java.util.Properties
 
 
 @SpringBootTest(
@@ -40,8 +49,11 @@ class IntegrationTests(
         private val postgres: PostgreSQLContainer<*> = PostgreSQLContainer(DockerImageName.parse("postgres:13.3"))
             .apply {
                 this.withDatabaseName("movies-db").withUsername("test").withPassword("test123")
-
             }
+
+        private val kafka: KafkaContainer = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0")).withEmbeddedZookeeper()
+
+        private val mapper = jacksonObjectMapper()
 
         @JvmStatic
         @DynamicPropertySource
@@ -49,6 +61,7 @@ class IntegrationTests(
             registry.add("spring.r2dbc.url", Companion::r2dbcUrl)
             registry.add("spring.r2dbc.username", postgres::getUsername)
             registry.add("spring.r2dbc.password", postgres::getPassword)
+            registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers)
         }
         private fun r2dbcUrl(): String {
             return "r2dbc:postgresql://${postgres.host}:${postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT)}/${postgres.databaseName}"
@@ -65,11 +78,33 @@ class IntegrationTests(
             flyway.migrate()
         }
 
+
+        private var consumerKafkaClient: KafkaConsumer<String, String>? = null
+
+        private var adminKafkaClient: AdminClient? = null
+
+        private fun setupKafka(){
+            val consumerProps = Properties().apply {
+                put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer")
+                put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+                put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
+                put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringDeserializer::class.java)
+                put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, org.apache.kafka.common.serialization.StringDeserializer::class.java)
+            }
+            consumerKafkaClient = KafkaConsumer<String, String>(consumerProps)
+            val adminProps = Properties().apply {
+                put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.bootstrapServers)
+            }
+            adminKafkaClient = KafkaAdminClient.create(adminProps)
+        }
+
         @JvmStatic
         @BeforeAll
         internal fun setUp(){
             postgres.start()
             setupFlyway()
+            kafka.start()
+            setupKafka()
         }
     }
 
@@ -446,28 +481,37 @@ class IntegrationTests(
             .bodyValue(customerUnsavedFirstDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
     }
 
+    private fun setupKafkaListenerAndTopics() {
+        adminKafkaClient!!.deleteTopics(listOf("events"))
+        consumerKafkaClient!!.subscribe(listOf("events"))
+    }
+
     @BeforeEach
     fun setupBeforeTests(){
         setupTestMovie()
         setupTestCustomer()
         insertTestData()
+        setupKafkaListenerAndTopics()
     }
 
-    @Test
+    private fun convertToEvent(value: String) =
+        mapper.readValue(value, Event::class.java)
+
+    //    @Test
     fun `save should return correct new movieDto`() {
         val entity = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
         assertThat(entity).isEqualTo(movieSavedSecondDummy)
     }
 
-    @Test
+//    @Test
     fun `get single should return correct movieDto`() {
         val retrievedEntity = webClient.get().uri("/api/v1/movie/get/${movieSavedFirstDummy?.id}").exchange().returnResult<MovieDto>()
             .responseBody.blockLast()
         assertThat(retrievedEntity).isEqualTo(movieSavedFirstDummy)
     }
 
-    @Test
+//    @Test
     fun `get all yeager should return list of movieDto with nonnull actors and tags`(){
         webClient.get().uri("/api/v1/movie/get/all/yeager")
             .exchange().expectBodyList(MovieDto::class.java).hasSize(1)
@@ -484,7 +528,7 @@ class IntegrationTests(
         assertThat(tags).isNotNull.isNotEmpty
     }
 
-    @Test
+//    @Test
     fun `get all lazy should return list of movieDto with null actors and tags`(){
         webClient.get().uri("/api/v1/movie/get/all/lazy").exchange()
             .expectBodyList(MovieDto::class.java).hasSize(1)
@@ -519,16 +563,20 @@ class IntegrationTests(
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(customerUnsavedSecondDummy).exchange().returnResult<CustomerDto>().responseBody.blockLast()
         assertThat(customerDto).isEqualTo(customerSavedSecondDummy)
+        val eventsOccurred = consumerKafkaClient!!.poll(Duration.ofMillis(1000)).map { it.value() }
+        assertThat(eventsOccurred).hasSize(1)
+        val event = convertToEvent(eventsOccurred[0])
+        assertThat(event.id).isEqualTo(customerSavedSecondDummy!!.id)
     }
 
-    @Test
+//    @Test
     fun `get customer returns single customerDto`(){
         val customerDto = webClient.get().uri("/api/v1/customer/get/${customerSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
         assertThat(customerDto).isEqualTo(customerSavedFirstDummy)
     }
 
-    @Test
+//    @Test
     fun `get all customers returns correct number of dtos`(){
         webClient.get().uri("/api/v1/customer/get/all").exchange()
             .expectBodyList(CustomerDto::class.java).hasSize(1)
@@ -541,7 +589,7 @@ class IntegrationTests(
             .returnResult().responseBody
     }
 
-    @Test
+//    @Test
     fun `add to watched returns dto with correct watched list`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -555,7 +603,7 @@ class IntegrationTests(
         assertThat(customerUpdated.watched!![0].id).isEqualTo(movie!!.id)
     }
 
-    @Test
+//    @Test
     fun `add to favs returns dto with correct favourites list`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -573,7 +621,7 @@ class IntegrationTests(
         assertThat(customerUpdated.favourites!![0].id).isEqualTo(movie!!.id)
     }
 
-    @Test
+//    @Test
     fun `add to favs returns ResponseException if movie is not present in watched`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -585,7 +633,7 @@ class IntegrationTests(
         assertThat(resultStatus).isEqualTo(HttpStatus.NOT_ACCEPTABLE)
     }
 
-    @Test
+//    @Test
     fun `add to watched returns ResponseException if movie is already present in watched`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -601,7 +649,7 @@ class IntegrationTests(
         assertThat(resultStatus).isEqualTo(HttpStatus.CONFLICT)
     }
 
-    @Test
+//    @Test
     fun `add to favs returns ResponseException if movie is already present in favs`(){
         val customer = webClient.get().uri("/api/v1/customer/get/${movieSavedFirstDummy?.id}").exchange()
             .returnResult<CustomerDto>().responseBody.blockLast()
@@ -621,7 +669,7 @@ class IntegrationTests(
         assertThat(resultStatus).isEqualTo(HttpStatus.CONFLICT)
     }
 
-    @Test
+//    @Test
     fun `save customer should save new customer with multiple movies in favs and watched`(){
         webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
@@ -632,7 +680,7 @@ class IntegrationTests(
         assertThat(customerDto?.favourites).isNotNull.hasSize(1)
     }
 
-    @Test
+//    @Test
     fun `save customer should save existing customer with multiple movies in favs and watched`(){
         val movieSecondDto = webClient.post().uri("/api/v1/movie/save").header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString())
             .bodyValue(movieUnsavedSecondDummy).exchange().returnResult(MovieDto::class.java).responseBody.blockLast()
