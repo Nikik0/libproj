@@ -16,7 +16,7 @@ class UtilConfig {
             .registerKotlinModule()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
-
-    @Bean
-    fun customDispatcher(): CoroutineDispatcher = Dispatchers.IO
+//
+//    @Bean
+//    fun customDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }
