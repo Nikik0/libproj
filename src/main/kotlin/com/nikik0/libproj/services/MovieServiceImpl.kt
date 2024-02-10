@@ -2,6 +2,10 @@ package com.nikik0.libproj.services
 
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.entities.*
+import com.nikik0.libproj.kafka.model.EntityAffected
+import com.nikik0.libproj.kafka.model.Event
+import com.nikik0.libproj.kafka.model.EventType
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,7 +20,8 @@ class MovieServiceImpl(
     private val actorService: ActorService,
     private val tagService: TagService,
     private val studioService: StudioService,
-    private val manyToManyRepository: ManyToManyRepository
+    private val manyToManyRepository: ManyToManyRepository,
+    private val eventProducer: EventProducer
 ) : MovieService {
     companion object{
         private val logger = LogFactory.getLog(MovieServiceImpl::class.java)
@@ -26,9 +31,8 @@ class MovieServiceImpl(
             this.actors = actorService.findActorsForMovie(this.id)
             this.studio = studioService.findStudioForMovie(this.id)
             this.tags = tagService.findTagsForMovie(this.id)
-        }?.mapToDto().let {
+        }?.mapToDto().also {
             logger.info("Successfully retrieved movie ${it?.id}")
-            it
         }
 
     @Transactional
@@ -46,9 +50,16 @@ class MovieServiceImpl(
         manyToManyRepository.movieActorInsert(movieEntity.id, movieEntity.actors.map { it.id })
         manyToManyRepository.tagMovieInsert(movieEntity.tags.map { it.id }, movieEntity.id)
         if (movieEntity.studio != null) manyToManyRepository.studioMovieInsert(movieEntity.studio!!.id, movieEntity.id)
-        return movieEntity.mapToDto().let {
+        return movieEntity.mapToDto().also {
             logger.info("Successfully saved movie ${it.id}")
-            it
+            eventProducer.publish(
+                Event(
+                    it.id,
+                    EventType.CREATE,
+                    EntityAffected.MOVIE,
+                    "Movie saved"
+                )
+            )
         }
     }
 
@@ -57,39 +68,33 @@ class MovieServiceImpl(
         it.studio = studioService.findStudioForMovie(it.id)
         it.tags = tagService.findTagsForMovie(it.id)
         it.mapToDto()
-    }.let {
+    }.also {
         logger.info("Successfully retrieved movies (yeager)")
-        it
     }
 
-    override suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }.let {
+    override suspend fun getAllLazy() = movieRepository.findAll().map { it.mapToDto() }.also {
         logger.info("Successfully retrieved movies (lazy)")
-        it
     }
 
     override suspend fun findByTag(tag: String) : Flow<MovieDto>? {
         val tagFromRepo = tagService.findByName(tag)
-        return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }.let {
+        return if (tagFromRepo != null) movieRepository.findMoviesByTagId(tagFromRepo.id).map { it.mapToDto() }.also {
             logger.info("Successfully retrieved movies by tag ${tagFromRepo.name}")
-            it
         } else null
     }
 
     override suspend fun findFavMoviesForCustomerId(customerId: Long) =
-        movieRepository.findFavMoviesForCustomerId(customerId).let {
+        movieRepository.findFavMoviesForCustomerId(customerId).also {
             logger.info("Successfully retrieved fav movies for customer $customerId")
-            it
         }
 
     override suspend fun findWatchedMoviesForCustomerId(customerId: Long) =
-        movieRepository.findWatchedMoviesForCustomerId(customerId).let {
+        movieRepository.findWatchedMoviesForCustomerId(customerId).also {
             logger.info("Successfully retrieved watched movies for customer $customerId")
-            it
         }
 
     override suspend fun getOneLazy(movieId: Long) =
-        movieRepository.findById(movieId).let {
+        movieRepository.findById(movieId).also {
             logger.info("Successfully retrieved lazy movie ${it?.id}")
-            it
         }
 }
