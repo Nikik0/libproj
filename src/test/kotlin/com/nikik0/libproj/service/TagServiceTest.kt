@@ -3,6 +3,7 @@ package com.nikik0.libproj.service
 import com.nikik0.libproj.entities.MovieEntity
 import com.nikik0.libproj.entities.MovieStudio
 import com.nikik0.libproj.entities.MovieTag
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.StudioRepository
 import com.nikik0.libproj.repositories.TagRepository
 import com.nikik0.libproj.services.StudioServiceImpl
@@ -23,6 +24,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(MockKExtension::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class TagServiceTest {
+    @MockK
+    lateinit var eventProducer: EventProducer
 
     @MockK
     lateinit var tagRepository: TagRepository
@@ -67,6 +70,7 @@ class TagServiceTest {
         // given
         coEvery { tagRepository.save(movieTag1) } returns movieTag1
         coEvery { tagRepository.findByName(movieTag1.name) } returns null
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = tagService.saveTagIfNotPresent(movieTag1)

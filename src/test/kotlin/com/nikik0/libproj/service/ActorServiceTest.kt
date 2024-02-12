@@ -2,6 +2,7 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.entities.Actor
 import com.nikik0.libproj.entities.MovieEntity
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.ActorRepository
 import com.nikik0.libproj.services.ActorServiceImpl
 import io.mockk.coEvery
@@ -23,6 +24,9 @@ import org.junit.jupiter.api.Test
 class ActorServiceTest {
     @MockK
     lateinit var actorRepository: ActorRepository
+
+    @MockK
+    lateinit var eventProducer: EventProducer
 
     @InjectMockKs
     lateinit var actorService: ActorServiceImpl
@@ -68,6 +72,7 @@ class ActorServiceTest {
         // given
         coEvery { actorRepository.save(actorEntity1) } returns actorEntity1
         coEvery { actorRepository.findByNameAndSurname(actorEntity1.name, actorEntity1.surname) } returns null
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = actorService.saveActorIfNotPresent(actorEntity1)
