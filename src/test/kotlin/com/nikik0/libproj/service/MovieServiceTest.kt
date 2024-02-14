@@ -154,29 +154,6 @@ class MovieServiceTest {
         }
     }
 
-//    @OptIn(DelicateCoroutinesApi::class)
-//    private val mainThreadSurrogate = newSingleThreadContext("test thread")
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @Before
-//    fun setUp() {
-//        Dispatchers.setMain(mainThreadSurrogate)
-//    }
-//
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @After
-//    fun tearDown() {
-//        Dispatchers.resetMain() // reset the main dispatcher to the original Main dispatcher
-//        mainThreadSurrogate.close()
-//    }
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @Test
-//    fun testtest() = runTest  {
-//        launch(Dispatchers.Main) {
-//            println(movieService.saveOne(movieDto))
-//            assertEquals(movieService.saveOne(movieDto), movieDto)
-//        }
-//    }
-
 
     @BeforeEach
     fun setup(){
