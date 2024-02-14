@@ -53,6 +53,9 @@ spring:
     url: ${envs.database.url}
     username: dev
     password: dev123
+  kafka:
+    bootstrap-servers: localhost:9092
+    topic: events
 
 #spring:
 #  r2dbc:

@@ -3,6 +3,7 @@ package com.nikik0.libproj.service
 import com.nikik0.libproj.dtos.MovieDto
 import com.nikik0.libproj.dtos.mapToEntity
 import com.nikik0.libproj.entities.*
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.ManyToManyRepository
 import com.nikik0.libproj.repositories.MovieRepository
 import com.nikik0.libproj.services.*
@@ -26,6 +27,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 class MovieServiceTest {
     @MockK
     lateinit var movieRepository: MovieRepository
+    @MockK
+    lateinit var eventProducer: EventProducer
     @MockK
     lateinit var actorService: ActorServiceImpl
     @MockK
@@ -63,11 +66,6 @@ class MovieServiceTest {
 
     private lateinit var studio2: MovieStudio
 
-//    idk if this is need or not
-//    @Before
-//    fun setup1() {
-//        MockKAnnotations.init(this, relaxUnitFun = true)
-//    }
 
 
     private fun setupEntities() {
@@ -151,29 +149,6 @@ class MovieServiceTest {
         }
     }
 
-//    @OptIn(DelicateCoroutinesApi::class)
-//    private val mainThreadSurrogate = newSingleThreadContext("test thread")
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @Before
-//    fun setUp() {
-//        Dispatchers.setMain(mainThreadSurrogate)
-//    }
-//
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @After
-//    fun tearDown() {
-//        Dispatchers.resetMain() // reset the main dispatcher to the original Main dispatcher
-//        mainThreadSurrogate.close()
-//    }
-//    @OptIn(ExperimentalCoroutinesApi::class)
-//    @Test
-//    fun testtest() = runTest  {
-//        launch(Dispatchers.Main) {
-//            println(movieService.saveOne(movieDto))
-//            assertEquals(movieService.saveOne(movieDto), movieDto)
-//        }
-//    }
-
 
     @BeforeEach
     fun setup(){
@@ -196,6 +171,7 @@ class MovieServiceTest {
         coEvery { manyToManyRepository.movieActorInsert(1, listOf(1, 2)) } returns Unit
         coEvery { manyToManyRepository.tagMovieInsert(listOf(1, 2), 1) } returns Unit
         coEvery { manyToManyRepository.studioMovieInsert(1, 1) } returns Unit
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = movieService.saveOne(movieDto1)

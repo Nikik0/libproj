@@ -8,6 +8,10 @@ import com.nikik0.libproj.entities.toDto
 import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
 import com.nikik0.libproj.exceptions.NotFoundEntityResponseException
+import com.nikik0.libproj.kafka.model.EntityAffected
+import com.nikik0.libproj.kafka.model.Event
+import com.nikik0.libproj.kafka.model.EventType
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.*
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -23,7 +27,8 @@ class CustomerServiceImpl(
     private val customerRepository: CustomerRepository,
     private val addressRepository: AddressRepository,
     private val manyToManyRepository: ManyToManyRepository,
-    private val movieService: MovieService
+    private val movieService: MovieService,
+    private val eventProducer: EventProducer
 ) : CustomerService {
     companion object{
         private val logger = LogFactory.getLog(CustomerServiceImpl::class.java)
@@ -34,9 +39,8 @@ class CustomerServiceImpl(
             address = addressRepository.findById(addressId)
             watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }?.toDto().let {
+        }?.toDto().also {
             logger.info("Successfully retrieved customer ${it?.id}")
-            it
         } ?: throw NotFoundEntityResponseException(
             HttpStatus.NOT_FOUND,
             "Customer with id $id wasn't found"
@@ -45,9 +49,8 @@ class CustomerServiceImpl(
     override suspend fun getAllCustomers() = customerRepository.findAll().map {
         it.address = addressRepository.findById(it.addressId)
         it.toDto()
-    }.let {
+    }.also {
         logger.info("Successfully retrieved customers")
-        it
     }
 
     @Transactional
@@ -85,14 +88,26 @@ class CustomerServiceImpl(
         return customerEntity.apply {
             this.watched = movieService.findWatchedMoviesForCustomerId(this.id).toList()
             this.favorites = movieService.findFavMoviesForCustomerId(this.id).toList()
-        }.toDto().let {
+        }.toDto().also {
             logger.info("Successfully saved customer with id ${it.id}")
-            it
+            eventProducer.publish(Event(
+                it.id,
+                EventType.CREATE,
+                EntityAffected.CUSTOMER,
+                "Customer created"
+            ))
         }
     }
 
     override suspend fun deleteCustomer(customer: CustomerDto) =
-        customerRepository.deleteById(customer.id)
+        customerRepository.deleteById(customer.id).also {
+            eventProducer.publish(Event(
+                customer.id,
+                EventType.DELETE,
+                EntityAffected.CUSTOMER,
+                "Customer deleted"
+            ))
+        }
 
     @Transactional
     override suspend fun addToWatched(customerId: Long, movieDto: MovieDto): CustomerDto {
@@ -119,6 +134,12 @@ class CustomerServiceImpl(
         )
         manyToManyRepository.customerWatchedMovieInsert(customerId, movieId)
         logger.info("Successfully added movie $movieId to watched for customer $customerId")
+        eventProducer.publish(Event(
+            customerId,
+            EventType.ADD,
+            EntityAffected.CUSTOMER,
+            "Movie $movieId added to watched"
+        ))
         return getCustomer(customerId)
     }
 
@@ -153,12 +174,17 @@ class CustomerServiceImpl(
         ) throw AlreadyPresentResponseException( //todo might want to ignore these if saving already present customer with watched list of old and new movies
             HttpStatus.CONFLICT,
             "Favourite movie with id $movieId is already present in favourites list for user $customerId"
-        ).let {
+        ).also {
             logger.error("Error $it occurred in request ${MDC.get("requestId")}")
-            it
         }
         manyToManyRepository.customerFavouriteMovieInsert(customerId, movieId)
         logger.info("Successfully added movie $movieId to favs for customer $customerId")
+        eventProducer.publish(Event(
+            customerId,
+            EventType.ADD,
+            EntityAffected.CUSTOMER,
+            "Movie $movieId added to favs"
+        ))
         return getCustomer(customerId)
     }
 }

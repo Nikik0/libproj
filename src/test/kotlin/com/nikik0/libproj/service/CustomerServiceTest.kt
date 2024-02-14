@@ -4,6 +4,7 @@ import com.nikik0.libproj.dtos.CustomerDto
 import com.nikik0.libproj.entities.*
 import com.nikik0.libproj.exceptions.AlreadyPresentResponseException
 import com.nikik0.libproj.exceptions.MovieNotInWatchedResponseException
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.AddressRepository
 import com.nikik0.libproj.repositories.CustomerRepository
 import com.nikik0.libproj.repositories.ManyToManyRepository
@@ -29,6 +30,9 @@ import org.junit.jupiter.api.extension.ExtendWith
 class CustomerServiceTest {
     @MockK
     lateinit var addressRepository: AddressRepository
+
+    @MockK
+    lateinit var eventProducer: EventProducer
 
     @MockK
     lateinit var customerRepository: CustomerRepository
@@ -202,6 +206,7 @@ class CustomerServiceTest {
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity2.id) } returns emptyFlow()
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns emptyFlow()
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity2.id) } returns emptyFlow()
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result1 = customerService.saveCustomer(customerDto1)
@@ -223,6 +228,7 @@ class CustomerServiceTest {
         coEvery { movieService.findWatchedMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf()
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns false
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = customerService.addToWatched(customerEntity1.id, movieEntity1.mapToDto())
@@ -266,6 +272,7 @@ class CustomerServiceTest {
         coEvery { movieService.findFavMoviesForCustomerId(customerEntity1.id) } returns flowOf(movieEntity1)
         coEvery { manyToManyRepository.checkIfCustomerWatchedMovie(customerEntity1.id, movieEntity1.id) } returns true
         coEvery { manyToManyRepository.checkIfCustomerFavMovie(customerEntity1.id, movieEntity1.id) } returns false
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = customerService.addToFavourites(customerEntity1.id, movieEntity1.mapToDto())

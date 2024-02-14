@@ -2,6 +2,7 @@ package com.nikik0.libproj.service
 
 import com.nikik0.libproj.entities.MovieEntity
 import com.nikik0.libproj.entities.MovieStudio
+import com.nikik0.libproj.kafka.service.EventProducer
 import com.nikik0.libproj.repositories.StudioRepository
 import com.nikik0.libproj.services.StudioServiceImpl
 import io.mockk.coEvery
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(MockKExtension::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class StudioServiceTest {
+    @MockK
+    lateinit var eventProducer: EventProducer
 
     @MockK
     lateinit var studioRepository: StudioRepository
@@ -69,6 +72,7 @@ class StudioServiceTest {
         // given
         coEvery { studioRepository.save(studioEntity1) } returns studioEntity1
         coEvery { studioRepository.findByName(studioEntity1.name) } returns null
+        coEvery { eventProducer.publish(any()) } returns Unit
 
         // when
         val result = studioService.saveStudioIfNotPresent(studioEntity1)
