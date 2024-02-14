@@ -66,11 +66,6 @@ class MovieServiceTest {
 
     private lateinit var studio2: MovieStudio
 
-//    idk if this is need or not
-//    @Before
-//    fun setup1() {
-//        MockKAnnotations.init(this, relaxUnitFun = true)
-//    }
 
 
     private fun setupEntities() {
