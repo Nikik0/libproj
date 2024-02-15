@@ -489,7 +489,6 @@ class IntegrationTests(
         //todo either poll all the events before each test to cleanup topic or delete and create same empty topic, both aren't really working tho
         println(consumerKafkaClient!!.poll(Duration.ofMillis(1000)).map { it.value() })
 //        val polled = consumerKafkaClient!!.poll(Duration.ofMillis(10)).map { it.value() }
-//        if (polled.isNotEmpty()) println("FUCK $polled")
 //        consumerKafkaClient!!.subscribe(listOf("events"))
     }
 
