@@ -71,11 +71,11 @@ git config --global core.autocrlf input
 ```
 http://localhost:8083/v3/webjars/swagger-ui/index.html#/
 ```
-* Logs can be checked here
+* Logs can be checked here (login: elastic, password: changeme)
 ```
 http://localhost:5601/
 ```
-* Metrics are available at
+* Metrics are available at (login: admin, password: admin)
 ```
 http://localhost:3000/
 ```
