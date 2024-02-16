@@ -61,6 +61,10 @@ docker-compose -f docker-compose-all.yml up testcontainers_bridge_to_docker_daem
 ```
 docker-compose -f docker-compose-all.yml up -d
 ```
+* In case you experience "/bin/sh: ./gradlew not found", this is caused by incorrect line endings, fix: remove the cloned repo, change global git settings to nix style line endings and redo steps from copying the repo
+```
+git config --global core.autocrlf input
+```
 ### Accessing api
 
 * Swagger is available here
